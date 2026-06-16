@@ -1128,7 +1128,7 @@
           : `<a href="#" class="parent-link" data-parent="${r.parentNo}">${r.parentNo}</a>`;
         const childChips = r.children.length
           ? `<div class="child-chips">
-                ${r.children.map((c, idx) => `<span class="child-chip ${idx === 0 || idx === r.children.length - 1 ? 'suffix' : ''}">${c}</span>`).join('')}
+                ${r.children.map((c, idx) => `<span class="child-chip ${idx === 0 || idx === r.children.length - 1 ? 'suffix' : ''}" data-child="${c}" role="button" tabindex="0">${c}</span>`).join('')}
              </div>`
           : '';
         const statusMeta = isUpcoming
@@ -1159,6 +1159,18 @@
         a.addEventListener('click', e => {
           e.preventDefault();
           alert(`Would open per-job Delivery Journey for parent ${a.dataset.parent}`);
+        });
+      });
+
+      list.querySelectorAll('.child-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          alert(`Would open the Search page filtered to job ${chip.dataset.child}`);
+        });
+        chip.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            alert(`Would open the Search page filtered to job ${chip.dataset.child}`);
+          }
         });
       });
     }
