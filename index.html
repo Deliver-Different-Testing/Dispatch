@@ -3,262 +3,587 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Inbound Depot Demo</title>
+  <title>Despatch — Inbound Depot View (mockup)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..700,0..1,-50..200" rel="stylesheet" />
   <style>
+    :root {
+      --primary: #2196f3;
+      --primary-dark: #1565c0;
+      --bg: #FAFAFA;
+      --surface: #ffffff;
+      --surface-low: #f5f5f5;
+      --surface-high: #e0e0e0;
+      --whitesmoke: whitesmoke;
+      --text-dark: rgba(0, 0, 0, 0.87);
+      --text-muted: rgba(0, 0, 0, 0.54);
+      --divider: rgba(0, 0, 0, 0.12);
+      --row-divider: rgba(0, 0, 0, 0.08);
+      --hover: rgba(0, 0, 0, 0.04);
+      --selected: rgba(25, 118, 210, 0.08);
+      --selected-border: #1976d2;
+
+      --radius-md: 8px;
+      --radius-sm: 6px;
+      --radius-full: 9999px;
+
+      --shadow-box: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+
+      --status-new-bg: #BFDBFE;
+      --status-despatched-bg: #BBF7D0;
+      --status-transit-bg: #86EFAC;
+      --status-warning-bg: #FCA5A5;
+      --status-completed-bg: #9CA3AF;
+    }
+
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: Inter, system-ui, -apple-system, sans-serif; background:#f4f2f1; color:#0d0c2c; }
-    .topbar { height: 52px; background:#0d0c2c; color:#fff; display:flex; align-items:center; padding:0 18px; gap:14px; }
-    .logo { font-weight: 800; letter-spacing:-0.3px; }
-    .pill { font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:rgba(59,199,244,.15); color:#7fddf7; border:1px solid rgba(59,199,244,.3); }
-    .subbar { height: 42px; background:#fff; border-bottom:1px solid #e4e2e0; display:flex; align-items:center; padding:0 18px; gap:10px; }
-    .chip { font-size:11px; font-weight:700; padding:5px 10px; border-radius:999px; border:1px solid #d8d5d2; background:#fff; color:#6e6d80; }
-    .chip.on { background:#eef1ff; border-color:#2a4eff; color:#2a4eff; }
-    .layout { display:grid; grid-template-columns: 280px 380px 1fr; gap:12px; padding:12px; height: calc(100vh - 94px); }
-    .panel { background:#fff; border:1px solid #e4e2e0; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; min-height:0; }
-    .hd { padding:14px 16px 10px; border-bottom:1px solid #f0eeec; display:flex; align-items:center; justify-content:space-between; }
-    .hd h3 { margin:0; font-size:13px; }
-    .meta { font-size:10px; color:#9997a3; font-weight:600; text-transform:uppercase; letter-spacing:.08em; }
-    .body { overflow:auto; }
-    table { width:100%; border-collapse:collapse; }
-    th { text-align:left; padding:8px 12px; font-size:9px; color:#9997a3; text-transform:uppercase; letter-spacing:.08em; border-bottom:1px solid #ece9e6; background:#fff; position:sticky; top:0; }
-    td { padding:10px 12px; font-size:12px; border-bottom:1px solid #f4f2f1; vertical-align:top; }
-    tr.clickable { cursor:pointer; }
-    tr.clickable:hover td { background:#faf9f8; }
-    tr.active td { background:#eef1ff; }
-    tr.active td:first-child { box-shadow: inset 3px 0 0 #2a4eff; }
-    .depot-name { font-weight:700; }
-    .depot-sub { font-size:10px; color:#9997a3; margin-top:2px; }
-    .count { font-weight:800; color:#2a4eff; }
-    .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:999px; font-size:10px; font-weight:700; }
-    .badge.inbound { color:#0d8cb5; background:#def5fd; }
-    .badge.live { color:#0d7a3f; background:#d0f1e0; }
-    .badge.pending { color:#b85a0d; background:#ffe6d1; }
-    .route { font-weight:700; }
-    .muted { color:#9997a3; font-size:10px; }
-    .jobs-list { padding:12px; display:grid; gap:10px; }
-    .job { border:1px solid #ece9e6; border-radius:12px; padding:12px; }
-    .job-top { display:flex; justify-content:space-between; gap:10px; }
-    .job-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight:800; color:#2a4eff; font-size:12px; }
-    .job-client { font-weight:700; margin-top:4px; }
-    .job-dest { font-size:11px; color:#6e6d80; margin-top:3px; }
-    .tag-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
-    .tag { font-size:10px; font-weight:700; padding:3px 7px; border-radius:999px; background:#f4f2f1; color:#6e6d80; }
-    .tag.pickup { background:#b1e9fb; color:#0d8cb5; }
-    .tag.inbound { background:#d4dcff; color:#2a4eff; }
-    .summary { padding:12px 16px; border-top:1px solid #f0eeec; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-    .stat { background:#faf9f8; border-radius:10px; padding:10px; }
-    .stat .label { font-size:10px; color:#9997a3; text-transform:uppercase; letter-spacing:.06em; }
-    .stat .value { font-size:20px; font-weight:800; margin-top:3px; }
-    .notice { margin:12px; background:#fff8e8; border:1px solid #f4ddb2; color:#8d5e00; border-radius:12px; padding:10px 12px; font-size:11px; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+      color: var(--text-dark);
+      background: var(--bg);
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .app-header {
+      height: 48px;
+      background: #263238;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .app-header .crumb { opacity: 0.7; }
+    .app-header .crumb-sep { opacity: 0.4; }
+    .app-header .current { font-weight: 600; }
+    .app-header .mockup-pill {
+      margin-left: auto;
+      background: #f4c430;
+      color: #000;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    .dashboard-padding {
+      padding: 8px;
+      height: calc(100vh - 48px);
+      overflow: hidden;
+    }
+    .columns {
+      display: flex;
+      flex-flow: row nowrap;
+      gap: 4px;
+      height: 100%;
+    }
+    .column {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-width: 200px;
+    }
+    .column-sortable {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      height: 100%;
+    }
+
+    .box {
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-box);
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+    }
+    .widget-toolbar {
+      flex-shrink: 0;
+      min-height: 44px;
+      height: 44px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--surface-high);
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+    }
+    .md-toolbar-tools {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+    .md-toolbar-tools .material-symbols-outlined {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+    }
+    .md-card-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-dark);
+    }
+    .toolbar-spacer { flex: 1; }
+    .toolbar-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .toolbar-icon-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 150ms;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+    }
+    .toolbar-icon-btn:hover { background: rgba(0,0,0,0.08); }
+
+    .box-content {
+      flex: 1;
+      min-height: 0;
+      background: var(--whitesmoke);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .depot-list {
+      overflow-y: auto;
+      flex: 1;
+    }
+    .depot-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      background: var(--surface);
+      border-bottom: 1px solid var(--row-divider);
+      transition: background-color 100ms;
+    }
+    .depot-item:hover { background: var(--surface-low); }
+    .depot-item.selected {
+      background: var(--selected);
+      border-left: 3px solid var(--selected-border);
+      padding-left: 11px;
+    }
+    .depot-item .material-symbols-outlined {
+      font-size: 20px;
+      color: var(--text-muted);
+    }
+    .depot-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+    }
+    .depot-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+    .depot-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .depot-badge {
+      background: var(--primary);
+      color: white;
+      min-width: 28px;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .data-table__container {
+      overflow: auto;
+      flex: 1;
+      background: var(--surface);
+    }
+    table.data-table__table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .data-table__header-row {
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .data-table__header-cell {
+      text-align: left;
+      padding: 12px;
+      height: 40px;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--divider);
+      white-space: nowrap;
+    }
+    .data-table__row {
+      cursor: pointer;
+      transition: background-color 100ms;
+    }
+    .data-table__row:hover { background: var(--surface-low); }
+    .data-table__row.selected {
+      background: var(--selected);
+    }
+    .data-table__cell {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--row-divider);
+      vertical-align: middle;
+      line-height: 1.4;
+    }
+    .data-table__cell.mono {
+      font-family: 'SF Mono', Consolas, monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .data-table__cell .primary {
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+    .data-table__cell .secondary {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 10px;
+      border-radius: var(--radius-full);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+      color: rgba(0,0,0,0.78);
+    }
+    .status-chip.new { background: var(--status-new-bg); }
+    .status-chip.despatched { background: var(--status-despatched-bg); }
+    .status-chip.in-transit { background: var(--status-transit-bg); }
+    .status-chip.warning { background: var(--status-warning-bg); }
+    .status-chip.completed { background: var(--status-completed-bg); color: white; }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+      padding: 32px;
+      text-align: center;
+    }
+    .empty-state .material-symbols-outlined {
+      font-size: 40px;
+      opacity: 0.5;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+    ::-webkit-scrollbar-track { background: transparent; }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="logo">RunViewer</div>
-    <div class="pill">Inbound Collection Depots demo</div>
-  </div>
-  <div class="subbar">
-    <span class="chip on">Inbound</span>
-    <span class="chip">Outbound</span>
-    <span class="chip">Combined</span>
-    <span class="chip on">Collection jobs only</span>
-  </div>
-
-  <div class="layout">
-    <section class="panel">
-      <div class="hd">
-        <div>
-          <h3>Overview</h3>
-          <div class="meta">Inbound collections by depot</div>
-        </div>
-      </div>
-      <div class="body">
-        <table>
-          <thead>
-            <tr><th>Depot</th><th>Jobs</th><th>Schedules</th></tr>
-          </thead>
-          <tbody id="overviewRows"></tbody>
-        </table>
-      </div>
-      <div class="summary">
-        <div class="stat"><div class="label">Inbound depots</div><div class="value" id="statDepots">0</div></div>
-        <div class="stat"><div class="label">Collection jobs</div><div class="value" id="statJobs">0</div></div>
-        <div class="stat"><div class="label">Selected depot</div><div class="value" id="statSelected" style="font-size:14px;line-height:1.2;">—</div></div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="hd">
-        <div>
-          <h3>Run List</h3>
-          <div class="meta" id="runListMeta">Inbound schedules heading into depot</div>
-        </div>
-        <span class="badge inbound">Inbound</span>
-      </div>
-      <div class="body">
-        <table>
-          <thead>
-            <tr><th>Run</th><th>Route</th><th>Jobs</th><th>Status</th></tr>
-          </thead>
-          <tbody id="runRows"></tbody>
-        </table>
-      </div>
-      <div class="notice">Click a depot on the left. The run list and associated jobs update using the same inbound schedule assignment.</div>
-    </section>
-
-    <section class="panel">
-      <div class="hd">
-        <div>
-          <h3 id="jobsTitle">Associated Jobs</h3>
-          <div class="meta" id="jobsMeta">Inbound collection jobs for selected schedule</div>
-        </div>
-        <span class="badge live" id="jobsBadge">Live selection</span>
-      </div>
-      <div class="body jobs-list" id="jobCards"></div>
-    </section>
+  <div class="app-header">
+    <span class="material-symbols-outlined" style="font-size:20px;">local_shipping</span>
+    <span>Despatch</span>
+    <span class="crumb-sep">/</span>
+    <span class="crumb">Operations</span>
+    <span class="crumb-sep">/</span>
+    <span class="current">Inbound Depot View</span>
+    <span class="mockup-pill">UI Mockup</span>
   </div>
 
-<script>
-const depots = [
-  {
-    id: 'reno',
-    name: 'Reno consolidation response centre',
-    region: 'Northern California',
-    schedules: [
-      {
-        id: 'INB-RNO-01',
-        route: 'Sacramento → Reno Depot',
-        status: 'Live',
-        jobs: [
-          { id:'COL-10428', client:'UC Medical', from:'Sacramento, CA', to:'Reno consolidation response centre', window:'09:15–10:00', items:4 },
-          { id:'COL-10431', client:'Fresenius', from:'Davis, CA', to:'Reno consolidation response centre', window:'09:30–10:30', items:2 },
-          { id:'COL-10435', client:'Baxter', from:'Woodland, CA', to:'Reno consolidation response centre', window:'10:15–11:00', items:3 }
-        ]
-      },
-      {
-        id: 'INB-RNO-02',
-        route: 'Roseville → Reno Depot',
-        status: 'Pending',
-        jobs: [
-          { id:'COL-10442', client:'Quest Labs', from:'Roseville, CA', to:'Reno consolidation response centre', window:'11:00–11:45', items:1 },
-          { id:'COL-10444', client:'Cardinal', from:'Rocklin, CA', to:'Reno consolidation response centre', window:'11:10–12:00', items:5 }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'aliso',
-    name: 'Aliso Viejo depot',
-    region: 'South California',
-    schedules: [
-      {
-        id: 'INB-ALI-01',
-        route: 'Riverside → Aliso Viejo Depot',
-        status: 'Live',
-        jobs: [
-          { id:'COL-10501', client:'BD Medical', from:'Riverside, CA', to:'Aliso Viejo depot', window:'09:00–09:40', items:2 },
-          { id:'COL-10507', client:'Bio-Rad', from:'Anaheim, CA', to:'Aliso Viejo depot', window:'09:20–10:20', items:6 }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'fresno',
-    name: 'Fresno cross-dock depot',
-    region: 'Central Valley',
-    schedules: [
-      {
-        id: 'INB-FRE-01',
-        route: 'Modesto → Fresno Cross-Dock',
-        status: 'Pending',
-        jobs: [
-          { id:'COL-10522', client:'VWR', from:'Modesto, CA', to:'Fresno cross-dock depot', window:'12:00–12:45', items:3 }
-        ]
-      }
-    ]
-  }
-];
-
-let selectedDepotId = 'reno';
-let selectedRunId = 'INB-RNO-01';
-
-function jobCount(depot) { return depot.schedules.reduce((n, s) => n + s.jobs.length, 0); }
-function getDepot(id) { return depots.find(d => d.id === id); }
-function getRun(depot, runId) { return depot.schedules.find(s => s.id === runId) || depot.schedules[0]; }
-
-function renderOverview() {
-  const tbody = document.getElementById('overviewRows');
-  tbody.innerHTML = depots.map(depot => `
-    <tr class="clickable ${depot.id === selectedDepotId ? 'active' : ''}" onclick="selectDepot('${depot.id}')">
-      <td>
-        <div class="depot-name">${depot.name}</div>
-        <div class="depot-sub">${depot.region}</div>
-      </td>
-      <td class="count">${jobCount(depot)}</td>
-      <td>${depot.schedules.length}</td>
-    </tr>
-  `).join('');
-  document.getElementById('statDepots').textContent = depots.length;
-  document.getElementById('statJobs').textContent = depots.reduce((n,d)=> n + jobCount(d), 0);
-  document.getElementById('statSelected').textContent = getDepot(selectedDepotId).name;
-}
-
-function renderRuns() {
-  const depot = getDepot(selectedDepotId);
-  const tbody = document.getElementById('runRows');
-  document.getElementById('runListMeta').textContent = `${depot.name} · ${jobCount(depot)} inbound collection jobs`;
-  tbody.innerHTML = depot.schedules.map(run => `
-    <tr class="clickable ${run.id === selectedRunId ? 'active' : ''}" onclick="selectRun('${run.id}')">
-      <td>
-        <div class="route">${run.id}</div>
-        <div class="muted">Inbound collection schedule</div>
-      </td>
-      <td>
-        <div>${run.route}</div>
-        <div class="muted">Destination depot: ${depot.name}</div>
-      </td>
-      <td class="count">${run.jobs.length}</td>
-      <td><span class="badge ${run.status === 'Live' ? 'live' : 'pending'}">${run.status}</span></td>
-    </tr>
-  `).join('');
-}
-
-function renderJobs() {
-  const depot = getDepot(selectedDepotId);
-  const run = getRun(depot, selectedRunId);
-  document.getElementById('jobsTitle').textContent = `${depot.name}`;
-  document.getElementById('jobsMeta').textContent = `${run.id} · ${run.route}`;
-  document.getElementById('jobsBadge').textContent = `${run.jobs.length} associated jobs`;
-  document.getElementById('jobCards').innerHTML = run.jobs.map(job => `
-    <div class="job">
-      <div class="job-top">
-        <div>
-          <div class="job-id">${job.id}</div>
-          <div class="job-client">${job.client}</div>
-          <div class="job-dest">Collection from ${job.from} → inbound to ${job.to}</div>
-        </div>
-        <div style="text-align:right;">
-          <div class="muted">Window</div>
-          <div style="font-weight:800;">${job.window}</div>
+  <div class="dashboard-padding">
+    <div class="columns">
+      <div class="column" style="flex-basis: 280px; flex-grow: 0; flex-shrink: 0;">
+        <div class="column-sortable">
+          <div class="box">
+            <div class="widget-toolbar">
+              <div class="md-toolbar-tools">
+                <span class="material-symbols-outlined">warehouse</span>
+                <span class="md-card-title">Overview</span>
+                <span class="toolbar-spacer"></span>
+                <span class="toolbar-meta" id="depotCount"></span>
+              </div>
+            </div>
+            <div class="box-content">
+              <div class="depot-list" id="depotList"></div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="tag-row">
-        <span class="tag pickup">Collection</span>
-        <span class="tag inbound">Inbound</span>
-        <span class="tag">${job.items} items</span>
+
+      <div class="column" style="flex-basis: 480px; flex-grow: 1;">
+        <div class="column-sortable">
+          <div class="box">
+            <div class="widget-toolbar">
+              <div class="md-toolbar-tools">
+                <span class="material-symbols-outlined">schedule</span>
+                <span class="md-card-title">Run List</span>
+                <span class="toolbar-meta" id="runListSubtitle">— Select a depot</span>
+                <span class="toolbar-spacer"></span>
+                <button class="toolbar-icon-btn" title="Refresh"><span class="material-symbols-outlined" style="font-size:18px;">refresh</span></button>
+              </div>
+            </div>
+            <div class="box-content" id="runListContent">
+              <div class="empty-state">
+                <span class="material-symbols-outlined">touch_app</span>
+                <div>Select a destination depot on the left to view inbound runs.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="column" style="flex-basis: 520px; flex-grow: 1;">
+        <div class="column-sortable">
+          <div class="box">
+            <div class="widget-toolbar">
+              <div class="md-toolbar-tools">
+                <span class="material-symbols-outlined">inventory_2</span>
+                <span class="md-card-title">Associated Jobs</span>
+                <span class="toolbar-meta" id="jobsSubtitle">— Select a run</span>
+                <span class="toolbar-spacer"></span>
+                <button class="toolbar-icon-btn" title="Refresh"><span class="material-symbols-outlined" style="font-size:18px;">refresh</span></button>
+              </div>
+            </div>
+            <div class="box-content" id="jobsContent">
+              <div class="empty-state">
+                <span class="material-symbols-outlined">inventory_2</span>
+                <div>Select a run to view its associated jobs.</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  `).join('');
-}
+  </div>
 
-function selectDepot(id) {
-  selectedDepotId = id;
-  selectedRunId = getDepot(id).schedules[0].id;
-  renderAll();
-}
-function selectRun(id) { selectedRunId = id; renderRuns(); renderJobs(); }
-function renderAll() { renderOverview(); renderRuns(); renderJobs(); }
-renderAll();
-</script>
+  <script>
+    const depots = [
+      { id: 'AKL', name: 'Auckland Central', code: 'AKL', region: 'Auckland', jobCount: 24 },
+      { id: 'WLG', name: 'Wellington Hub', code: 'WLG', region: 'Wellington', jobCount: 18 },
+      { id: 'CHC', name: 'Christchurch', code: 'CHC', region: 'Canterbury', jobCount: 15 },
+      { id: 'HLZ', name: 'Hamilton', code: 'HLZ', region: 'Waikato', jobCount: 9 },
+      { id: 'TRG', name: 'Tauranga', code: 'TRG', region: 'Bay of Plenty', jobCount: 7 },
+      { id: 'DUD', name: 'Dunedin', code: 'DUD', region: 'Otago', jobCount: 4 },
+    ];
+
+    const runsByDepot = {
+      AKL: [
+        { id: 'AKL-INB-001', origin: 'Tauranga', via: 'Road', eta: '09:30', vehicle: 'TRK-1241', jobCount: 8, status: 'in-transit', statusLabel: 'In Transit' },
+        { id: 'AKL-INB-002', origin: 'Hamilton', via: 'Road', eta: '10:15', vehicle: 'TRK-0987', jobCount: 6, status: 'new', statusLabel: 'New' },
+        { id: 'AKL-INB-003', origin: 'Wellington', via: 'Air NZ521', eta: '11:00', vehicle: 'FLT-NZ521', jobCount: 5, status: 'despatched', statusLabel: 'Despatched' },
+        { id: 'AKL-INB-004', origin: 'Rotorua', via: 'Road', eta: '13:45', vehicle: 'TRK-1158', jobCount: 5, status: 'new', statusLabel: 'New' },
+      ],
+      WLG: [
+        { id: 'WLG-INB-001', origin: 'Palmerston North', via: 'Road', eta: '08:45', vehicle: 'TRK-2201', jobCount: 7, status: 'in-transit', statusLabel: 'In Transit' },
+        { id: 'WLG-INB-002', origin: 'Auckland', via: 'Air NZ410', eta: '09:20', vehicle: 'FLT-NZ410', jobCount: 6, status: 'despatched', statusLabel: 'Despatched' },
+        { id: 'WLG-INB-003', origin: 'Napier', via: 'Road', eta: '12:00', vehicle: 'TRK-2208', jobCount: 5, status: 'new', statusLabel: 'New' },
+      ],
+      CHC: [
+        { id: 'CHC-INB-001', origin: 'Dunedin', via: 'Road', eta: '07:30', vehicle: 'TRK-3301', jobCount: 6, status: 'in-transit', statusLabel: 'In Transit' },
+        { id: 'CHC-INB-002', origin: 'Auckland', via: 'Air NZ515', eta: '10:40', vehicle: 'FLT-NZ515', jobCount: 5, status: 'despatched', statusLabel: 'Despatched' },
+        { id: 'CHC-INB-003', origin: 'Wellington', via: 'Air NZ417', eta: '14:25', vehicle: 'FLT-NZ417', jobCount: 4, status: 'new', statusLabel: 'New' },
+      ],
+      HLZ: [
+        { id: 'HLZ-INB-001', origin: 'Auckland', via: 'Road', eta: '08:10', vehicle: 'TRK-1421', jobCount: 5, status: 'in-transit', statusLabel: 'In Transit' },
+        { id: 'HLZ-INB-002', origin: 'Tauranga', via: 'Road', eta: '11:55', vehicle: 'TRK-1438', jobCount: 4, status: 'new', statusLabel: 'New' },
+      ],
+      TRG: [
+        { id: 'TRG-INB-001', origin: 'Auckland', via: 'Road', eta: '09:05', vehicle: 'TRK-1602', jobCount: 4, status: 'in-transit', statusLabel: 'In Transit' },
+        { id: 'TRG-INB-002', origin: 'Hamilton', via: 'Road', eta: '12:30', vehicle: 'TRK-1611', jobCount: 3, status: 'new', statusLabel: 'New' },
+      ],
+      DUD: [
+        { id: 'DUD-INB-001', origin: 'Christchurch', via: 'Road', eta: '10:50', vehicle: 'TRK-3402', jobCount: 4, status: 'in-transit', statusLabel: 'In Transit' },
+      ],
+    };
+
+    const jobsByRun = {
+      'AKL-INB-001': [
+        { id: 'UC-481923', sender: 'ABC Logistics, Tauranga', recipient: 'Smith & Co, Auckland CBD', pieces: 3, weight: '12.4 kg', status: 'in-transit', statusLabel: 'In Transit' },
+        { id: 'UC-481924', sender: 'BayPak Freight, Mt Maunganui', recipient: 'Johnson Ltd, Mt Eden', pieces: 1, weight: '4.1 kg', status: 'in-transit', statusLabel: 'In Transit' },
+        { id: 'UC-481925', sender: 'Kiwi Parts, Te Puke', recipient: 'AutoWorks, Penrose', pieces: 5, weight: '28.0 kg', status: 'in-transit', statusLabel: 'In Transit' },
+        { id: 'UC-481926', sender: 'OceanFresh, Tauranga', recipient: 'Sushi Bar Co, Newmarket', pieces: 2, weight: '8.6 kg', status: 'in-transit', statusLabel: 'In Transit' },
+        { id: 'UC-481927', sender: 'ABC Logistics, Tauranga', recipient: 'Albany Park Medical', pieces: 1, weight: '2.2 kg', status: 'in-transit', statusLabel: 'In Transit' },
+        { id: 'UC-481928', sender: 'PortSide Co, Tauranga', recipient: 'CBD Office Tower', pieces: 4, weight: '16.5 kg', status: 'in-transit', statusLabel: 'In Transit' },
+        { id: 'UC-481929', sender: 'Greenwood Farms', recipient: 'Auckland Foodhub', pieces: 6, weight: '42.0 kg', status: 'in-transit', statusLabel: 'In Transit' },
+        { id: 'UC-481930', sender: 'BayPak Freight, Mt Maunganui', recipient: 'Westside Mall', pieces: 2, weight: '7.3 kg', status: 'in-transit', statusLabel: 'In Transit' },
+      ],
+      'AKL-INB-002': [
+        { id: 'UC-482001', sender: 'Waikato Engineering', recipient: 'Henderson Workshop', pieces: 2, weight: '14.0 kg', status: 'new', statusLabel: 'New' },
+        { id: 'UC-482002', sender: 'Hamilton Print', recipient: 'Britomart Agency', pieces: 1, weight: '3.5 kg', status: 'new', statusLabel: 'New' },
+        { id: 'UC-482003', sender: 'FieldDays Supply', recipient: 'Onehunga Trades', pieces: 4, weight: '22.7 kg', status: 'new', statusLabel: 'New' },
+        { id: 'UC-482004', sender: 'AgriParts NZ', recipient: 'Mangere Depot', pieces: 3, weight: '18.1 kg', status: 'new', statusLabel: 'New' },
+        { id: 'UC-482005', sender: 'Hamilton Print', recipient: 'Queen St Office', pieces: 1, weight: '2.0 kg', status: 'new', statusLabel: 'New' },
+        { id: 'UC-482006', sender: 'WaikatoMed Supply', recipient: 'North Shore Hospital', pieces: 2, weight: '5.4 kg', status: 'new', statusLabel: 'New' },
+      ],
+      'AKL-INB-003': [
+        { id: 'UC-482101', sender: 'Wellington Tech', recipient: 'Parnell Studios', pieces: 1, weight: '6.8 kg', status: 'despatched', statusLabel: 'Despatched' },
+        { id: 'UC-482102', sender: 'Govt Supply, Thorndon', recipient: 'Auckland Council', pieces: 2, weight: '4.4 kg', status: 'despatched', statusLabel: 'Despatched' },
+        { id: 'UC-482103', sender: 'Wellington Lab', recipient: 'AKL Medical Centre', pieces: 1, weight: '1.2 kg', status: 'warning', statusLabel: 'Late Pickup' },
+        { id: 'UC-482104', sender: 'Capital Wines', recipient: 'Ponsonby Cellar', pieces: 6, weight: '24.0 kg', status: 'despatched', statusLabel: 'Despatched' },
+        { id: 'UC-482105', sender: 'Wellington Tech', recipient: 'CBD Datacentre', pieces: 1, weight: '9.1 kg', status: 'despatched', statusLabel: 'Despatched' },
+      ],
+      'AKL-INB-004': [
+        { id: 'UC-482201', sender: 'Rotorua Timber Co', recipient: 'Manukau Trades', pieces: 4, weight: '34.2 kg', status: 'new', statusLabel: 'New' },
+        { id: 'UC-482202', sender: 'Thermal Spa Supply', recipient: 'Newmarket Hotel', pieces: 2, weight: '11.0 kg', status: 'new', statusLabel: 'New' },
+        { id: 'UC-482203', sender: 'BOP AgriPack', recipient: 'East Tamaki Cold Store', pieces: 5, weight: '27.6 kg', status: 'new', statusLabel: 'New' },
+        { id: 'UC-482204', sender: 'Rotorua Print Shop', recipient: 'CBD Marketing Co', pieces: 1, weight: '2.8 kg', status: 'new', statusLabel: 'New' },
+        { id: 'UC-482205', sender: 'Volcanic Activities', recipient: 'Sky City Concierge', pieces: 1, weight: '0.6 kg', status: 'new', statusLabel: 'New' },
+      ],
+    };
+
+    function renderDepots() {
+      const list = document.getElementById('depotList');
+      list.innerHTML = depots.map(d => `
+        <div class="depot-item" data-depot="${d.id}" role="button" tabindex="0">
+          <span class="material-symbols-outlined">warehouse</span>
+          <div class="depot-info">
+            <span class="depot-name">${d.name}</span>
+            <span class="depot-meta">${d.code} · ${d.region}</span>
+          </div>
+          <span class="depot-badge">${d.jobCount}</span>
+        </div>
+      `).join('');
+      document.getElementById('depotCount').textContent = `${depots.length} depots`;
+
+      list.querySelectorAll('.depot-item').forEach(el => {
+        el.addEventListener('click', () => selectDepot(el.dataset.depot));
+      });
+    }
+
+    function selectDepot(depotId) {
+      document.querySelectorAll('.depot-item').forEach(el => {
+        el.classList.toggle('selected', el.dataset.depot === depotId);
+      });
+      const depot = depots.find(d => d.id === depotId);
+      const runs = runsByDepot[depotId] || [];
+      document.getElementById('runListSubtitle').textContent = `— Inbound to ${depot.name} · ${runs.length} runs`;
+
+      const content = document.getElementById('runListContent');
+      if (runs.length === 0) {
+        content.innerHTML = `<div class="empty-state"><span class="material-symbols-outlined">inbox</span><div>No inbound runs scheduled.</div></div>`;
+      } else {
+        content.innerHTML = `
+          <div class="data-table__container">
+            <table class="data-table__table">
+              <thead>
+                <tr class="data-table__header-row">
+                  <th class="data-table__header-cell">Run</th>
+                  <th class="data-table__header-cell">Origin</th>
+                  <th class="data-table__header-cell">Mode</th>
+                  <th class="data-table__header-cell">ETA</th>
+                  <th class="data-table__header-cell" style="text-align:right;">Jobs</th>
+                  <th class="data-table__header-cell">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${runs.map(r => `
+                  <tr class="data-table__row" data-run="${r.id}">
+                    <td class="data-table__cell"><div class="primary">${r.id}</div><div class="secondary">${r.vehicle}</div></td>
+                    <td class="data-table__cell">${r.origin}</td>
+                    <td class="data-table__cell">${r.via}</td>
+                    <td class="data-table__cell mono">${r.eta}</td>
+                    <td class="data-table__cell" style="text-align:right; font-weight:600;">${r.jobCount}</td>
+                    <td class="data-table__cell"><span class="status-chip ${r.status}">${r.statusLabel}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        content.querySelectorAll('.data-table__row').forEach(row => {
+          row.addEventListener('click', () => selectRun(row.dataset.run));
+        });
+        if (runs.length > 0) selectRun(runs[0].id);
+      }
+    }
+
+    function selectRun(runId) {
+      document.querySelectorAll('#runListContent .data-table__row').forEach(r => {
+        r.classList.toggle('selected', r.dataset.run === runId);
+      });
+      const jobs = jobsByRun[runId] || [];
+      document.getElementById('jobsSubtitle').textContent = `— ${runId} · ${jobs.length} jobs`;
+
+      const content = document.getElementById('jobsContent');
+      if (jobs.length === 0) {
+        content.innerHTML = `<div class="empty-state"><span class="material-symbols-outlined">inventory_2</span><div>No jobs on this run yet.</div><div style="font-size:11px;">(Sample data not populated — wire to real API.)</div></div>`;
+      } else {
+        content.innerHTML = `
+          <div class="data-table__container">
+            <table class="data-table__table">
+              <thead>
+                <tr class="data-table__header-row">
+                  <th class="data-table__header-cell">Job</th>
+                  <th class="data-table__header-cell">Sender</th>
+                  <th class="data-table__header-cell">Recipient</th>
+                  <th class="data-table__header-cell" style="text-align:right;">Pcs</th>
+                  <th class="data-table__header-cell">Weight</th>
+                  <th class="data-table__header-cell">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${jobs.map(j => `
+                  <tr class="data-table__row">
+                    <td class="data-table__cell"><div class="primary">${j.id}</div></td>
+                    <td class="data-table__cell">${j.sender}</td>
+                    <td class="data-table__cell">${j.recipient}</td>
+                    <td class="data-table__cell" style="text-align:right;">${j.pieces}</td>
+                    <td class="data-table__cell mono">${j.weight}</td>
+                    <td class="data-table__cell"><span class="status-chip ${j.status}">${j.statusLabel}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    renderDepots();
+    selectDepot('AKL');
+  </script>
 </body>
 </html>
