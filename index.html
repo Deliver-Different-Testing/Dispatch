@@ -1087,15 +1087,11 @@
 
     function renderStats(recurringId) {
       const runs = journeyByRecurring[recurringId] || [];
-      const stats = statsByRecurring[recurringId] || { onTimeRate: 0, voided: 0, courier: '—', courierRuns: '' };
+      const stats = statsByRecurring[recurringId] || { voided: 0 };
       const completed = runs.filter(r => r.status === 'completed').length;
       const pending = runs.filter(r => r.upcoming || r.status === 'in-progress').length;
       const voided = stats.voided;
       const total = completed + pending + voided;
-      const recurringRow = recurringJobs.find(r => r.id === recurringId);
-      const nextDue = recurringRow ? recurringRow.nextDue : '—';
-
-      const onTimeClass = stats.onTimeRate >= 90 ? 'accent-green' : (stats.onTimeRate >= 80 ? 'accent-amber' : 'accent-red');
 
       const html = `
         <div class="stat-breakdown">
@@ -1103,23 +1099,6 @@
           <div class="bd-cell completed"><div class="bd-value">${completed}</div><div class="bd-label">Completed</div></div>
           <div class="bd-cell voided"><div class="bd-value">${voided}</div><div class="bd-label">Voided</div></div>
           <div class="bd-cell pending"><div class="bd-value">${pending}</div><div class="bd-label">Pending</div></div>
-        </div>
-        <div class="stat-row">
-          <div class="stat-tile ${onTimeClass}">
-            <span class="stat-label">On-time delivery</span>
-            <span class="stat-value">${stats.onTimeRate}%</span>
-            <span class="stat-sub">completed before due time</span>
-          </div>
-          <div class="stat-tile accent-blue">
-            <span class="stat-label">Next due</span>
-            <span class="stat-value">${nextDue.split(' ').slice(0,3).join(' ')}</span>
-            <span class="stat-sub">${nextDue.split(' ').slice(3).join(' ') || '—'}</span>
-          </div>
-        </div>
-        <div class="stat-tile" title="Courier appearing on the most runs of this recurring schedule">
-          <span class="stat-label">Most frequent courier</span>
-          <span class="stat-value" style="font-size: 14px;">${stats.courier}</span>
-          <span class="stat-sub">${stats.courierRuns}</span>
         </div>
       `;
       document.getElementById('journeyStats').innerHTML = html;
