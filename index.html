@@ -3,319 +3,608 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Despatch — Inbound Depot View (mockup)</title>
+  <title>Dispatch — Recurring Dashboard with Recurring Delivery Journey (mockup)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..700,0..1,-50..200" rel="stylesheet" />
   <style>
     :root {
-      --primary: #2196f3;
-      --primary-dark: #1565c0;
-      --bg: #FAFAFA;
+      --brand-blue: #1e88e5;
+      --brand-blue-dark: #1565c0;
+      --brand-blue-darker: #0d47a1;
+      --app-bg: #f5f7fa;
       --surface: #ffffff;
-      --surface-low: #f5f5f5;
-      --surface-high: #e0e0e0;
-      --whitesmoke: whitesmoke;
-      --text-dark: rgba(0, 0, 0, 0.87);
-      --text-muted: rgba(0, 0, 0, 0.54);
-      --divider: rgba(0, 0, 0, 0.12);
-      --row-divider: rgba(0, 0, 0, 0.08);
-      --hover: rgba(0, 0, 0, 0.04);
-      --selected: rgba(25, 118, 210, 0.08);
-      --selected-border: #1976d2;
-
+      --surface-low: #fafafa;
+      --surface-alt: #f5f5f5;
+      --divider: rgba(0,0,0,0.08);
+      --divider-strong: rgba(0,0,0,0.12);
+      --text-primary: rgba(0,0,0,0.87);
+      --text-secondary: rgba(0,0,0,0.6);
+      --text-muted: rgba(0,0,0,0.42);
+      --shadow-card: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
       --radius-md: 8px;
-      --radius-sm: 6px;
+      --radius-sm: 4px;
       --radius-full: 9999px;
-
-      --shadow-box: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-
-      --status-new-bg: #BFDBFE;
-      --status-despatched-bg: #BBF7D0;
-      --status-transit-bg: #86EFAC;
-      --status-warning-bg: #FCA5A5;
-      --status-completed-bg: #9CA3AF;
+      --orange: #f57c00;
+      --green: #2e7d32;
+      --green-light: #c8e6c9;
+      --orange-light: #ffe0b2;
+      --status-new-bg: #ff9800;
+      --status-new-text: #fff;
+      --warn-bg: #fff8e1;
+      --warn-border: #ffc107;
     }
-
     * { box-sizing: border-box; }
     html, body {
-      margin: 0; padding: 0;
+      margin: 0;
+      padding: 0;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 14px;
-      color: var(--text-dark);
-      background: var(--bg);
-      height: 100%;
-      overflow: hidden;
-    }
-
-    .app-header {
-      height: 48px;
-      background: #263238;
-      color: white;
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      gap: 12px;
       font-size: 13px;
-      font-weight: 500;
-      flex-shrink: 0;
-    }
-    .app-header .crumb { opacity: 0.7; }
-    .app-header .crumb-sep { opacity: 0.4; }
-    .app-header .current { font-weight: 600; }
-    .app-header .mockup-pill {
-      margin-left: auto;
-      background: #f4c430;
-      color: #000;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: var(--radius-full);
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
-    }
-
-    .dashboard-padding {
-      padding: 8px;
-      height: calc(100vh - 48px);
+      color: var(--text-primary);
+      background: var(--app-bg);
+      height: 100%;
       overflow: hidden;
     }
-    .columns {
-      display: flex;
-      flex-flow: row nowrap;
-      gap: 4px;
-      height: 100%;
-    }
-    .column {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      min-width: 200px;
-    }
-    .column-sortable {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      height: 100%;
-    }
 
-    .box {
-      display: flex;
-      flex-direction: column;
-      background: var(--surface);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-box);
-      flex: 1;
-      overflow: hidden;
-      min-height: 0;
-    }
-    .widget-toolbar {
-      flex-shrink: 0;
-      min-height: 44px;
+    /* TOP APP BAR */
+    .app-bar {
       height: 44px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--surface-high);
-      display: flex;
-      align-items: center;
-      padding: 0 8px;
-    }
-    .md-toolbar-tools {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      width: 100%;
-    }
-    .md-toolbar-tools .material-symbols-outlined {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      color: var(--text-muted);
-    }
-    .md-card-title {
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      color: var(--text-dark);
-    }
-    .toolbar-spacer { flex: 1; }
-    .toolbar-meta {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-    .toolbar-icon-btn {
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 150ms;
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-    }
-    .toolbar-icon-btn:hover { background: rgba(0,0,0,0.08); }
-
-    .box-content {
-      flex: 1;
-      min-height: 0;
-      background: var(--whitesmoke);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .depot-list {
-      overflow-y: auto;
-      flex: 1;
-    }
-    .depot-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      cursor: pointer;
-      background: var(--surface);
-      border-bottom: 1px solid var(--row-divider);
-      transition: background-color 100ms;
-    }
-    .depot-item:hover { background: var(--surface-low); }
-    .depot-item.selected {
-      background: var(--selected);
-      border-left: 3px solid var(--selected-border);
-      padding-left: 11px;
-    }
-    .depot-item .material-symbols-outlined {
-      font-size: 20px;
-      color: var(--text-muted);
-    }
-    .depot-info {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      min-width: 0;
-    }
-    .depot-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-dark);
-    }
-    .depot-meta {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-    .depot-badge {
-      background: var(--primary);
+      background: var(--brand-blue);
       color: white;
-      min-width: 28px;
-      height: 22px;
-      padding: 0 8px;
-      border-radius: var(--radius-full);
-      font-size: 12px;
-      font-weight: 600;
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      gap: 14px;
+      font-size: 13px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .app-bar .logo {
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      font-size: 16px;
+    }
+    .app-bar .crumb-sep { opacity: 0.6; }
+    .app-bar .crumb { opacity: 0.85; }
+    .app-bar .current { font-weight: 600; }
+    .app-bar .right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .app-bar .icon-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      opacity: 0.9;
+    }
+    .app-bar .icon-btn:hover { background: rgba(255,255,255,0.12); }
+    .app-bar .pill {
+      background: #f4c430;
+      color: #000;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
     }
 
-    .data-table__container {
+    /* PAGE LAYOUT */
+    .page {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      height: calc(100vh - 44px);
+      overflow: hidden;
+    }
+    .col-left  { flex: 0 0 460px; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+    .col-mid   { flex: 1 1 0;     display: flex; flex-direction: column; gap: 12px; min-height: 0; min-width: 0; }
+    .col-right { flex: 0 0 380px; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+
+    /* CARD */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+    .card-header {
+      background: var(--brand-blue);
+      color: white;
+      padding: 0 14px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .card-header.orange { background: var(--orange); }
+    .card-header.green  { background: var(--green); }
+    .card-header .material-symbols-outlined {
+      font-size: 18px;
+    }
+    .card-header .spacer { flex: 1; }
+    .card-header .header-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      opacity: 0.9;
+    }
+    .card-header .header-action:hover { background: rgba(255,255,255,0.15); }
+    .card-body {
+      padding: 12px 14px;
       overflow: auto;
       flex: 1;
-      background: var(--surface);
+      min-height: 0;
     }
-    table.data-table__table {
+    .card-body.compact { padding: 0; }
+
+    /* FILTERS CARD */
+    .filters-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+    .search-input {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-alt);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      flex: 1;
+    }
+    .status-toggle {
+      display: inline-flex;
+      border: 1px solid var(--divider-strong);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .status-toggle button {
+      border: none;
+      background: var(--surface);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .status-toggle button.active {
+      background: #2e7d32;
+      color: white;
+    }
+    .filter-row-2 {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .field {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 10px;
+      background: var(--surface);
+      border: 1px solid var(--divider-strong);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--text-secondary);
+      min-width: 110px;
+    }
+    .day-chips {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .day-chip {
+      width: 20px; height: 20px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 4px;
+      background: var(--surface-alt);
+      color: var(--text-secondary);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .day-chip.active {
+      background: var(--brand-blue);
+      color: white;
+    }
+
+    /* RECURRING JOBS TABLE */
+    .table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
+      font-size: 12px;
     }
-    .data-table__header-row {
+    .table thead th {
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--divider-strong);
       background: var(--surface);
       position: sticky;
       top: 0;
       z-index: 1;
+      white-space: nowrap;
     }
-    .data-table__header-cell {
-      text-align: left;
-      padding: 12px;
-      height: 40px;
+    .table tbody td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--divider);
+      vertical-align: middle;
+    }
+    .table tbody tr {
+      cursor: pointer;
+    }
+    .table tbody tr:hover { background: var(--surface-alt); }
+    .table tbody tr.selected {
+      background: rgba(30, 136, 229, 0.08);
+    }
+    .table .muted { color: var(--text-muted); font-size: 11px; }
+    .table .icon-cell {
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    /* JOB DETAILS — middle column */
+    .job-detail-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px 0;
+      flex-wrap: wrap;
+    }
+    .job-no {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.4px;
+    }
+    .child-tabs {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+    .child-tabs .parent-tab {
+      background: var(--brand-blue);
+      color: white;
       font-size: 11px;
-      font-weight: 500;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      letter-spacing: 0.4px;
+    }
+    .child-tabs .child-tab {
+      background: #fff3e0;
+      color: var(--orange);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      border: 1px solid #ffd9a8;
+    }
+    .child-tabs .child-tab:hover { background: #ffe0b2; }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: var(--status-new-bg);
+      color: var(--status-new-text);
+    }
+
+    .info-banner {
+      margin: 10px 14px 0;
+      background: #e3f2fd;
+      border-left: 3px solid var(--brand-blue);
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--brand-blue-darker);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1px;
+      background: var(--divider);
+      margin: 12px 14px 0;
+      border: 1px solid var(--divider);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .meta-cell {
+      background: var(--surface);
+      padding: 10px 12px;
+    }
+    .meta-cell .label {
+      font-size: 9px;
+      letter-spacing: 0.6px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .meta-cell .value {
+      font-size: 13px;
+      color: var(--text-primary);
+      font-weight: 600;
+      margin-top: 4px;
+      min-height: 17px;
+    }
+    .meta-cell .value.placeholder { color: var(--text-muted); font-weight: 400; }
+
+    .pickup-delivery {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: stretch;
+      padding: 12px 14px 0;
+    }
+    .pd-card {
+      border: 1px solid var(--divider);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .pd-header {
+      padding: 8px 12px;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .pd-header.orange { background: var(--orange); }
+    .pd-header.green  { background: var(--green); }
+    .pd-body { padding: 12px; font-size: 12px; line-height: 1.5; flex: 1; }
+    .pd-body .row { margin-top: 8px; font-size: 11px; color: var(--text-secondary); display: flex; gap: 6px; align-items: center; }
+    .pd-arrow {
+      align-self: center;
+      color: var(--text-muted);
+      font-size: 18px;
+    }
+
+    .miles-row {
+      text-align: center;
+      padding: 12px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .sub-card {
+      margin: 0 14px 12px;
+    }
+    .sub-card .card-header {
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    }
+    .sub-card .card-body {
+      border: 1px solid var(--divider);
+      border-top: none;
+      border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    }
+
+    .empty-mini {
+      text-align: center;
+      padding: 24px 12px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .empty-mini .material-symbols-outlined {
+      display: block;
+      font-size: 30px;
+      opacity: 0.5;
+      margin-bottom: 6px;
+    }
+
+    .three-card-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      padding: 0 14px 12px;
+    }
+    .mini-card {
+      border: 1px solid var(--divider);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .mini-card .card-header { height: 34px; font-size: 12px; }
+    .mini-card .mc-body { padding: 10px 12px; font-size: 12px; }
+    .mc-row { display: flex; gap: 8px; padding: 6px 0; align-items: center; }
+    .mc-row .material-symbols-outlined { font-size: 18px; color: var(--text-muted); }
+    .mc-row .mc-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .mc-row .mc-value { font-size: 12px; color: var(--text-primary); }
+
+    /* DELIVERY JOURNEY — right column (the new widget) */
+    .journey-info-strip {
+      background: var(--warn-bg);
+      border-bottom: 1px solid var(--warn-border);
+      padding: 8px 14px;
+      font-size: 11px;
+      color: #6b4f00;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .journey-info-strip .material-symbols-outlined { font-size: 16px; color: var(--warn-border); }
+
+    .journey-list {
+      list-style: none;
+      margin: 0;
+      padding: 6px 0;
+      position: relative;
+    }
+    .journey-list::before {
+      content: "";
+      position: absolute;
+      top: 14px;
+      bottom: 14px;
+      left: 28px;
+      width: 2px;
+      background: var(--divider);
+    }
+    .journey-item {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 10px;
+      padding: 10px 14px;
+      position: relative;
+    }
+    .journey-item:hover { background: var(--surface-alt); }
+    .journey-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--brand-blue);
+      border: 3px solid white;
+      box-shadow: 0 0 0 2px var(--brand-blue);
+      margin-top: 4px;
+      margin-left: 7px;
+      z-index: 1;
+    }
+    .journey-dot.completed { background: #43a047; box-shadow: 0 0 0 2px #43a047; }
+    .journey-dot.in-progress { background: #fb8c00; box-shadow: 0 0 0 2px #fb8c00; }
+    .journey-dot.upcoming { background: white; box-shadow: 0 0 0 2px #bdbdbd; }
+
+    .journey-body { min-width: 0; }
+    .journey-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .journey-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .journey-time {
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .journey-parent-line {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .journey-parent-line .label {
+      font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       color: var(--text-muted);
-      border-bottom: 1px solid var(--divider);
-      white-space: nowrap;
-    }
-    .data-table__row {
-      cursor: pointer;
-      transition: background-color 100ms;
-    }
-    .data-table__row:hover { background: var(--surface-low); }
-    .data-table__row.selected {
-      background: var(--selected);
-    }
-    .data-table__cell {
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--row-divider);
-      vertical-align: middle;
-      line-height: 1.4;
-    }
-    .data-table__cell.mono {
-      font-family: 'SF Mono', Consolas, monospace;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-    .data-table__cell .primary {
       font-weight: 600;
-      color: var(--text-dark);
     }
-    .data-table__cell .secondary {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
+    .parent-link {
+      color: var(--brand-blue);
+      font-weight: 700;
+      text-decoration: none;
+      padding: 2px 8px;
+      background: rgba(30,136,229,0.08);
+      border-radius: var(--radius-sm);
     }
-
-    .status-chip {
-      display: inline-flex;
-      align-items: center;
-      height: 22px;
-      padding: 0 10px;
-      border-radius: var(--radius-full);
+    .parent-link:hover { background: rgba(30,136,229,0.16); text-decoration: underline; }
+    .child-chips {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .child-chips .child-chip {
       font-size: 10px;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      white-space: nowrap;
-      color: rgba(0,0,0,0.78);
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-alt);
+      color: var(--text-secondary);
+      border: 1px solid var(--divider);
+      cursor: pointer;
     }
-    .status-chip.new { background: var(--status-new-bg); }
-    .status-chip.despatched { background: var(--status-despatched-bg); }
-    .status-chip.in-transit { background: var(--status-transit-bg); }
-    .status-chip.warning { background: var(--status-warning-bg); }
-    .status-chip.completed { background: var(--status-completed-bg); color: white; }
+    .child-chips .child-chip:hover {
+      background: #e3f2fd;
+      color: var(--brand-blue-dark);
+      border-color: #90caf9;
+    }
+    .child-chips .child-chip.suffix {
+      color: var(--brand-blue-dark);
+      font-weight: 700;
+    }
+    .journey-meta {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 10px;
+    }
+    .journey-meta .stat { display: inline-flex; align-items: center; gap: 3px; }
 
-    .empty-state {
-      flex: 1;
+    /* ANNOTATION CALLOUT */
+    .annotation {
+      margin: 12px 14px;
+      border: 2px dashed var(--warn-border);
+      background: var(--warn-bg);
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      color: #6b4f00;
+      line-height: 1.5;
+    }
+    .annotation strong { color: #5a3f00; }
+
+    /* footer table pager */
+    .table-pager {
       display: flex;
       align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 8px;
-      color: var(--text-muted);
-      font-size: 13px;
-      padding: 32px;
-      text-align: center;
-    }
-    .empty-state .material-symbols-outlined {
-      font-size: 40px;
-      opacity: 0.5;
+      justify-content: flex-end;
+      gap: 14px;
+      padding: 8px 14px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--divider);
     }
 
+    /* scrollbar */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
@@ -323,267 +612,372 @@
   </style>
 </head>
 <body>
-  <div class="app-header">
-    <span class="material-symbols-outlined" style="font-size:20px;">local_shipping</span>
-    <span>Despatch</span>
-    <span class="crumb-sep">/</span>
-    <span class="crumb">Operations</span>
-    <span class="crumb-sep">/</span>
-    <span class="current">Inbound Depot View</span>
-    <span class="mockup-pill">UI Mockup</span>
+  <!-- TOP APP BAR -->
+  <div class="app-bar">
+    <span class="logo">DFRNT</span>
+    <span class="crumb-sep">›</span>
+    <span class="crumb">Dashboards</span>
+    <span class="crumb-sep">›</span>
+    <span class="current">Recurring Jobs</span>
+    <div class="right">
+      <span class="pill">UI Mockup</span>
+      <span class="icon-btn material-symbols-outlined" style="font-size:20px;">notifications</span>
+      <span class="icon-btn material-symbols-outlined" style="font-size:20px;">apps</span>
+      <span class="icon-btn material-symbols-outlined" style="font-size:20px;">settings</span>
+      <span class="icon-btn material-symbols-outlined" style="font-size:20px;">menu</span>
+    </div>
   </div>
 
-  <div class="dashboard-padding">
-    <div class="columns">
-      <div class="column" style="flex-basis: 280px; flex-grow: 0; flex-shrink: 0;">
-        <div class="column-sortable">
-          <div class="box">
-            <div class="widget-toolbar">
-              <div class="md-toolbar-tools">
-                <span class="material-symbols-outlined">warehouse</span>
-                <span class="md-card-title">Overview</span>
-                <span class="toolbar-spacer"></span>
-                <span class="toolbar-meta" id="depotCount"></span>
-              </div>
+  <div class="page">
+    <!-- LEFT COLUMN: Filters + Recurring Jobs table -->
+    <div class="col-left">
+      <div class="card" style="flex: 0 0 auto;">
+        <div class="card-header">
+          <span class="material-symbols-outlined">tune</span>
+          <span>Filters</span>
+        </div>
+        <div class="card-body" style="overflow: visible;">
+          <div class="filters-grid">
+            <div class="search-input">
+              <span class="material-symbols-outlined" style="font-size:16px;">search</span>
+              <span>Search jobs…</span>
             </div>
-            <div class="box-content">
-              <div class="depot-list" id="depotList"></div>
+            <div class="status-toggle">
+              <button class="active">Active</button>
+              <button>Manual</button>
+              <button>Inactive</button>
             </div>
+          </div>
+          <div class="filter-row-2">
+            <div class="field">Speed <span class="material-symbols-outlined" style="font-size:16px; margin-left:auto;">expand_more</span></div>
+            <div class="field">Courier <span class="material-symbols-outlined" style="font-size:16px; margin-left:auto;">expand_more</span></div>
+            <div class="day-chips">
+              <span>Days:</span>
+              <span class="day-chip active">M</span>
+              <span class="day-chip active">T</span>
+              <span class="day-chip active">W</span>
+              <span class="day-chip active">T</span>
+              <span class="day-chip active">F</span>
+              <span class="day-chip">S</span>
+              <span class="day-chip">Su</span>
+            </div>
+            <div class="field">Route <span class="material-symbols-outlined" style="font-size:16px; margin-left:auto;">expand_more</span></div>
           </div>
         </div>
       </div>
 
-      <div class="column" style="flex-basis: 480px; flex-grow: 1;">
-        <div class="column-sortable">
-          <div class="box">
-            <div class="widget-toolbar">
-              <div class="md-toolbar-tools">
-                <span class="material-symbols-outlined">schedule</span>
-                <span class="md-card-title">Run List</span>
-                <span class="toolbar-meta" id="runListSubtitle">— Select a depot</span>
-                <span class="toolbar-spacer"></span>
-                <button class="toolbar-icon-btn" title="Refresh"><span class="material-symbols-outlined" style="font-size:18px;">refresh</span></button>
-              </div>
+      <div class="card" style="flex: 1 1 auto; min-height: 0;">
+        <div class="card-header">
+          <span class="material-symbols-outlined">event_repeat</span>
+          <span>Recurring Jobs (4)</span>
+        </div>
+        <div class="card-body compact" style="overflow: auto;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Booked ↑</th>
+                <th>Speed</th>
+                <th>Job Name</th>
+                <th>Client</th>
+                <th>Next Due</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="recurringRows"></tbody>
+          </table>
+        </div>
+        <div class="table-pager">
+          <span>Rows per page: 50 ▾</span>
+          <span>1–4 of 4</span>
+          <span class="material-symbols-outlined" style="font-size:18px;">chevron_left</span>
+          <span class="material-symbols-outlined" style="font-size:18px;">chevron_right</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MIDDLE COLUMN: Job Details -->
+    <div class="col-mid">
+      <div class="card" style="flex: 1 1 auto;">
+        <div class="card-header">
+          <span class="material-symbols-outlined">info</span>
+          <span id="midTitle">Job Details — Job #647</span>
+          <span class="spacer"></span>
+          <span class="header-action material-symbols-outlined">lock_open</span>
+          <span class="header-action material-symbols-outlined">view_module</span>
+          <span class="header-action material-symbols-outlined">more_vert</span>
+        </div>
+
+        <div class="info-banner">
+          <span class="material-symbols-outlined" style="font-size:16px;">info</span>
+          Recurring job — some fields may require confirmation.
+        </div>
+
+        <div class="job-detail-meta">
+          <div class="job-no" id="parentJobNo">KT2271CRT</div>
+          <div class="child-tabs" id="childTabs">
+            <span class="parent-tab">PARENT</span>
+            <span class="child-tab">*LHP</span>
+            <span class="child-tab">*LH1</span>
+            <span class="child-tab">*LH2</span>
+            <span class="child-tab">*LH3</span>
+            <span class="child-tab">*LH4</span>
+            <span class="child-tab">*DEL</span>
+          </div>
+        </div>
+
+        <div class="meta-grid">
+          <div class="meta-cell"><div class="label">Pricing</div><div class="value">US$41.94</div></div>
+          <div class="meta-cell"><div class="label">Created</div><div class="value">Jun/24 00:00 (PDT)</div></div>
+          <div class="meta-cell"><div class="label">Ready</div><div class="value">Jun/24 15:45 (PDT)</div></div>
+          <div class="meta-cell"><div class="label">PU Arrival</div><div class="value placeholder">—</div></div>
+          <div class="meta-cell"><div class="label">PU Time</div><div class="value placeholder">—</div></div>
+          <div class="meta-cell"><div class="label">Deliver By</div><div class="value placeholder">—</div></div>
+          <div class="meta-cell"><div class="label">Dispatched</div><div class="value placeholder">—</div></div>
+          <div class="meta-cell"><div class="label">Del Arrival</div><div class="value placeholder">—</div></div>
+          <div class="meta-cell"><div class="label">POD Name</div><div class="value placeholder">—</div></div>
+          <div class="meta-cell"><div class="label">POD Time</div><div class="value placeholder">—</div></div>
+          <div class="meta-cell"><div class="label">Follow Up</div><div class="value placeholder">—</div></div>
+          <div class="meta-cell"><div class="label">Client Name</div><div class="value">Neogenomics</div></div>
+        </div>
+
+        <div class="pickup-delivery">
+          <div class="pd-card">
+            <div class="pd-header orange">
+              <span class="material-symbols-outlined" style="font-size:18px;">location_on</span>
+              <span>Pickup</span>
             </div>
-            <div class="box-content" id="runListContent">
-              <div class="empty-state">
-                <span class="material-symbols-outlined">touch_app</span>
-                <div>Select a destination depot on the left to view inbound runs.</div>
-              </div>
+            <div class="pd-body">
+              Western Pathology, SUITE#340, 340/645 , North Arlington Avenue, Reno, Nevada, 89503, United States
+              <div class="row"><span class="material-symbols-outlined" style="font-size:14px;">person</span> CONTACT: Neogenomics</div>
+            </div>
+          </div>
+          <div class="pd-arrow">→</div>
+          <div class="pd-card">
+            <div class="pd-header green">
+              <span class="material-symbols-outlined" style="font-size:18px;">location_on</span>
+              <span>Delivery</span>
+            </div>
+            <div class="pd-body">
+              NeoGenomics Laboratories, 31 , Columbia, Aliso Viejo, California, 92656, United States
+              <div class="row"><span class="material-symbols-outlined" style="font-size:14px;">person</span> CONTACT: Booking NEOGE</div>
+              <div class="row"><span class="material-symbols-outlined" style="font-size:14px;">call</span> PHONE: Not specified</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="miles-row">↔ 503.0 miles</div>
+
+        <div class="sub-card">
+          <div class="card-header"><span class="material-symbols-outlined">sticky_note_2</span><span>Notes</span><span class="spacer"></span><span class="header-action material-symbols-outlined">add</span><span class="header-action material-symbols-outlined">format_list_bulleted</span></div>
+          <div class="card-body">
+            <div class="empty-mini">
+              <span class="material-symbols-outlined">note</span>
+              <div>No Notes</div>
+              <div style="font-size: 10px; margin-top: 4px;">No notes available for this job</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="three-card-row">
+          <div class="mini-card">
+            <div class="card-header"><span class="material-symbols-outlined">inventory_2</span><span>Package Details</span></div>
+            <div class="mc-body">
+              <div class="mc-row"><span class="material-symbols-outlined">scale</span><div><div class="mc-label">Quantity</div><div class="mc-value">5 lbs <span style="color:#43a047;">●</span></div></div></div>
+              <div class="mc-row"><span class="material-symbols-outlined">qr_code</span><div><div class="mc-label">Barcode</div><div class="mc-value" style="color:var(--text-muted);">—</div></div></div>
+            </div>
+          </div>
+          <div class="mini-card">
+            <div class="card-header"><span class="material-symbols-outlined">tag</span><span>Additional Info</span></div>
+            <div class="mc-body">
+              <div class="mc-row"><span class="material-symbols-outlined">warning</span><div><div class="mc-label">DG Class</div><div class="mc-value" style="color:var(--text-muted);">—</div></div></div>
+              <div class="mc-row"><span class="material-symbols-outlined">draw</span><div><div class="mc-label">Leave Parcel</div><div class="mc-value">Signature Required</div></div></div>
+            </div>
+          </div>
+          <div class="mini-card">
+            <div class="card-header"><span class="material-symbols-outlined">person</span><span>Booked By</span></div>
+            <div class="mc-body">
+              <div class="mc-row"><span class="material-symbols-outlined">login</span><div><div class="mc-label">Logged In</div><div class="mc-value">Kerran Tetley</div></div></div>
+              <div class="mc-row"><span class="material-symbols-outlined">source_environment</span><div><div class="mc-label">Source</div><div class="mc-value">Prebook Monitor Job</div></div></div>
+              <div class="mc-row"><span class="material-symbols-outlined">contact_mail</span><div><div class="mc-label">Contact</div><div class="mc-value">Neogenomics</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sub-card">
+          <div class="card-header"><span class="material-symbols-outlined">local_shipping</span><span>Delivery Details</span></div>
+          <div class="card-body">
+            <div class="empty-mini" style="padding:14px;">
+              <span class="material-symbols-outlined">local_shipping</span>
+              <div>Dispatcher and courier details appear here once assigned.</div>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="column" style="flex-basis: 520px; flex-grow: 1;">
-        <div class="column-sortable">
-          <div class="box">
-            <div class="widget-toolbar">
-              <div class="md-toolbar-tools">
-                <span class="material-symbols-outlined">inventory_2</span>
-                <span class="md-card-title">Associated Jobs</span>
-                <span class="toolbar-meta" id="jobsSubtitle">— Select a run</span>
-                <span class="toolbar-spacer"></span>
-                <button class="toolbar-icon-btn" title="Refresh"><span class="material-symbols-outlined" style="font-size:18px;">refresh</span></button>
-              </div>
-            </div>
-            <div class="box-content" id="jobsContent">
-              <div class="empty-state">
-                <span class="material-symbols-outlined">inventory_2</span>
-                <div>Select a run to view its associated jobs.</div>
-              </div>
-            </div>
-          </div>
+    <!-- RIGHT COLUMN: Delivery Journey (RECURRING) -->
+    <div class="col-right">
+      <div class="card" style="flex: 1 1 auto;">
+        <div class="card-header">
+          <span class="material-symbols-outlined">timeline</span>
+          <span>Delivery Journey</span>
+          <span style="font-size:10px; font-weight:600; background:rgba(255,255,255,0.18); padding:2px 8px; border-radius:9999px; margin-left:6px;">RECURRING</span>
+          <span class="spacer"></span>
+          <span class="header-action material-symbols-outlined">refresh</span>
+          <span class="header-action material-symbols-outlined">open_in_full</span>
+        </div>
+
+        <div class="journey-info-strip">
+          <span class="material-symbols-outlined">history_edu</span>
+          One entry per day the recurring schedule has run. Click a parent job link to open the per-job delivery journey.
+        </div>
+
+        <ul class="journey-list" id="journeyList"></ul>
+
+        <div class="annotation">
+          <strong>Mockup note:</strong> Each row represents one day's parent job created by the recurring schedule.
+          <br>• <strong>Parent</strong> = the clickable job number that opens the normal Delivery Journey.
+          <br>• <strong>Children</strong> = the LHP/LH1–LH4/DEL leg jobs auto-created underneath that parent.
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const depots = [
-      { id: 'AKL', name: 'Auckland Central', code: 'AKL', region: 'Auckland', jobCount: 24 },
-      { id: 'WLG', name: 'Wellington Hub', code: 'WLG', region: 'Wellington', jobCount: 18 },
-      { id: 'CHC', name: 'Christchurch', code: 'CHC', region: 'Canterbury', jobCount: 15 },
-      { id: 'HLZ', name: 'Hamilton', code: 'HLZ', region: 'Waikato', jobCount: 9 },
-      { id: 'TRG', name: 'Tauranga', code: 'TRG', region: 'Bay of Plenty', jobCount: 7 },
-      { id: 'DUD', name: 'Dunedin', code: 'DUD', region: 'Otago', jobCount: 4 },
+    // ---------- DATA ----------
+    const recurringJobs = [
+      { id: 'KT2271CRT', booked: '24 Jun 26 15:45', speed: 'Commingle Route', name: '10276 2110116', client: 'NEOGE', nextDue: '24 Jun 26 00:00', selected: true },
+      { id: 'KT2270CRT', booked: '23 Jun 26 14:00', speed: 'Express',          name: '10276 2110115', client: 'NEOGE', nextDue: '25 Jun 26 00:00' },
+      { id: 'KT2269CRT', booked: '22 Jun 26 09:30', speed: 'Commingle Route', name: '10276 2110114', client: 'NEOGE', nextDue: '24 Jun 26 00:00' },
+      { id: 'KT2268CRT', booked: '21 Jun 26 18:10', speed: 'Standard',        name: '10276 2110113', client: 'PHARMA', nextDue: '26 Jun 26 00:00' },
     ];
 
-    const runsByDepot = {
-      AKL: [
-        { id: 'AKL-INB-001', origin: 'Tauranga', via: 'Road', eta: '09:30', vehicle: 'TRK-1241', jobCount: 8, status: 'in-transit', statusLabel: 'In Transit' },
-        { id: 'AKL-INB-002', origin: 'Hamilton', via: 'Road', eta: '10:15', vehicle: 'TRK-0987', jobCount: 6, status: 'new', statusLabel: 'New' },
-        { id: 'AKL-INB-003', origin: 'Wellington', via: 'Air NZ521', eta: '11:00', vehicle: 'FLT-NZ521', jobCount: 5, status: 'despatched', statusLabel: 'Despatched' },
-        { id: 'AKL-INB-004', origin: 'Rotorua', via: 'Road', eta: '13:45', vehicle: 'TRK-1158', jobCount: 5, status: 'new', statusLabel: 'New' },
+    // Each "day" the recurring schedule fires, it creates ONE parent job and a chain of children.
+    // Children: LHP (linehaul pickup), LH1..LH4 (linehaul legs), DEL (delivery).
+    const childSuffixes = ['LHP', 'LH1', 'LH2', 'LH3', 'LH4', 'DEL'];
+
+    function makeRun(date, parentNo, status) {
+      return {
+        date, parentNo, status,
+        children: childSuffixes.map(s => `${parentNo}${s}`),
+        miles: 503,
+      };
+    }
+
+    const journeyByRecurring = {
+      // Newest first (most recent at top)
+      'KT2271CRT': [
+        makeRun('Jun 24, 2026', 'P1234', 'in-progress'),
+        makeRun('Jun 21, 2026', 'P1198', 'completed'),
+        makeRun('Jun 20, 2026', 'P1187', 'completed'),
+        makeRun('Jun 19, 2026', 'P1172', 'completed'),
+        makeRun('Jun 18, 2026', 'P1156', 'completed'),
+        makeRun('Jun 17, 2026', 'P1141', 'completed'),
+        makeRun('Jun 14, 2026', 'P1102', 'completed'),
+        makeRun('Jun 13, 2026', 'P1089', 'completed'),
+        { date: 'Jun 25, 2026', parentNo: '— pending —', status: 'upcoming', children: [], miles: 503, upcoming: true },
       ],
-      WLG: [
-        { id: 'WLG-INB-001', origin: 'Palmerston North', via: 'Road', eta: '08:45', vehicle: 'TRK-2201', jobCount: 7, status: 'in-transit', statusLabel: 'In Transit' },
-        { id: 'WLG-INB-002', origin: 'Auckland', via: 'Air NZ410', eta: '09:20', vehicle: 'FLT-NZ410', jobCount: 6, status: 'despatched', statusLabel: 'Despatched' },
-        { id: 'WLG-INB-003', origin: 'Napier', via: 'Road', eta: '12:00', vehicle: 'TRK-2208', jobCount: 5, status: 'new', statusLabel: 'New' },
+      'KT2270CRT': [
+        makeRun('Jun 23, 2026', 'P1212', 'completed'),
+        makeRun('Jun 18, 2026', 'P1144', 'completed'),
       ],
-      CHC: [
-        { id: 'CHC-INB-001', origin: 'Dunedin', via: 'Road', eta: '07:30', vehicle: 'TRK-3301', jobCount: 6, status: 'in-transit', statusLabel: 'In Transit' },
-        { id: 'CHC-INB-002', origin: 'Auckland', via: 'Air NZ515', eta: '10:40', vehicle: 'FLT-NZ515', jobCount: 5, status: 'despatched', statusLabel: 'Despatched' },
-        { id: 'CHC-INB-003', origin: 'Wellington', via: 'Air NZ417', eta: '14:25', vehicle: 'FLT-NZ417', jobCount: 4, status: 'new', statusLabel: 'New' },
+      'KT2269CRT': [
+        makeRun('Jun 22, 2026', 'P1200', 'completed'),
       ],
-      HLZ: [
-        { id: 'HLZ-INB-001', origin: 'Auckland', via: 'Road', eta: '08:10', vehicle: 'TRK-1421', jobCount: 5, status: 'in-transit', statusLabel: 'In Transit' },
-        { id: 'HLZ-INB-002', origin: 'Tauranga', via: 'Road', eta: '11:55', vehicle: 'TRK-1438', jobCount: 4, status: 'new', statusLabel: 'New' },
-      ],
-      TRG: [
-        { id: 'TRG-INB-001', origin: 'Auckland', via: 'Road', eta: '09:05', vehicle: 'TRK-1602', jobCount: 4, status: 'in-transit', statusLabel: 'In Transit' },
-        { id: 'TRG-INB-002', origin: 'Hamilton', via: 'Road', eta: '12:30', vehicle: 'TRK-1611', jobCount: 3, status: 'new', statusLabel: 'New' },
-      ],
-      DUD: [
-        { id: 'DUD-INB-001', origin: 'Christchurch', via: 'Road', eta: '10:50', vehicle: 'TRK-3402', jobCount: 4, status: 'in-transit', statusLabel: 'In Transit' },
+      'KT2268CRT': [
+        makeRun('Jun 21, 2026', 'P1190', 'completed'),
       ],
     };
 
-    const jobsByRun = {
-      'AKL-INB-001': [
-        { id: 'UC-481923', sender: 'ABC Logistics, Tauranga', recipient: 'Smith & Co, Auckland CBD', pieces: 3, weight: '12.4 kg', status: 'in-transit', statusLabel: 'In Transit' },
-        { id: 'UC-481924', sender: 'BayPak Freight, Mt Maunganui', recipient: 'Johnson Ltd, Mt Eden', pieces: 1, weight: '4.1 kg', status: 'in-transit', statusLabel: 'In Transit' },
-        { id: 'UC-481925', sender: 'Kiwi Parts, Te Puke', recipient: 'AutoWorks, Penrose', pieces: 5, weight: '28.0 kg', status: 'in-transit', statusLabel: 'In Transit' },
-        { id: 'UC-481926', sender: 'OceanFresh, Tauranga', recipient: 'Sushi Bar Co, Newmarket', pieces: 2, weight: '8.6 kg', status: 'in-transit', statusLabel: 'In Transit' },
-        { id: 'UC-481927', sender: 'ABC Logistics, Tauranga', recipient: 'Albany Park Medical', pieces: 1, weight: '2.2 kg', status: 'in-transit', statusLabel: 'In Transit' },
-        { id: 'UC-481928', sender: 'PortSide Co, Tauranga', recipient: 'CBD Office Tower', pieces: 4, weight: '16.5 kg', status: 'in-transit', statusLabel: 'In Transit' },
-        { id: 'UC-481929', sender: 'Greenwood Farms', recipient: 'Auckland Foodhub', pieces: 6, weight: '42.0 kg', status: 'in-transit', statusLabel: 'In Transit' },
-        { id: 'UC-481930', sender: 'BayPak Freight, Mt Maunganui', recipient: 'Westside Mall', pieces: 2, weight: '7.3 kg', status: 'in-transit', statusLabel: 'In Transit' },
-      ],
-      'AKL-INB-002': [
-        { id: 'UC-482001', sender: 'Waikato Engineering', recipient: 'Henderson Workshop', pieces: 2, weight: '14.0 kg', status: 'new', statusLabel: 'New' },
-        { id: 'UC-482002', sender: 'Hamilton Print', recipient: 'Britomart Agency', pieces: 1, weight: '3.5 kg', status: 'new', statusLabel: 'New' },
-        { id: 'UC-482003', sender: 'FieldDays Supply', recipient: 'Onehunga Trades', pieces: 4, weight: '22.7 kg', status: 'new', statusLabel: 'New' },
-        { id: 'UC-482004', sender: 'AgriParts NZ', recipient: 'Mangere Depot', pieces: 3, weight: '18.1 kg', status: 'new', statusLabel: 'New' },
-        { id: 'UC-482005', sender: 'Hamilton Print', recipient: 'Queen St Office', pieces: 1, weight: '2.0 kg', status: 'new', statusLabel: 'New' },
-        { id: 'UC-482006', sender: 'WaikatoMed Supply', recipient: 'North Shore Hospital', pieces: 2, weight: '5.4 kg', status: 'new', statusLabel: 'New' },
-      ],
-      'AKL-INB-003': [
-        { id: 'UC-482101', sender: 'Wellington Tech', recipient: 'Parnell Studios', pieces: 1, weight: '6.8 kg', status: 'despatched', statusLabel: 'Despatched' },
-        { id: 'UC-482102', sender: 'Govt Supply, Thorndon', recipient: 'Auckland Council', pieces: 2, weight: '4.4 kg', status: 'despatched', statusLabel: 'Despatched' },
-        { id: 'UC-482103', sender: 'Wellington Lab', recipient: 'AKL Medical Centre', pieces: 1, weight: '1.2 kg', status: 'warning', statusLabel: 'Late Pickup' },
-        { id: 'UC-482104', sender: 'Capital Wines', recipient: 'Ponsonby Cellar', pieces: 6, weight: '24.0 kg', status: 'despatched', statusLabel: 'Despatched' },
-        { id: 'UC-482105', sender: 'Wellington Tech', recipient: 'CBD Datacentre', pieces: 1, weight: '9.1 kg', status: 'despatched', statusLabel: 'Despatched' },
-      ],
-      'AKL-INB-004': [
-        { id: 'UC-482201', sender: 'Rotorua Timber Co', recipient: 'Manukau Trades', pieces: 4, weight: '34.2 kg', status: 'new', statusLabel: 'New' },
-        { id: 'UC-482202', sender: 'Thermal Spa Supply', recipient: 'Newmarket Hotel', pieces: 2, weight: '11.0 kg', status: 'new', statusLabel: 'New' },
-        { id: 'UC-482203', sender: 'BOP AgriPack', recipient: 'East Tamaki Cold Store', pieces: 5, weight: '27.6 kg', status: 'new', statusLabel: 'New' },
-        { id: 'UC-482204', sender: 'Rotorua Print Shop', recipient: 'CBD Marketing Co', pieces: 1, weight: '2.8 kg', status: 'new', statusLabel: 'New' },
-        { id: 'UC-482205', sender: 'Volcanic Activities', recipient: 'Sky City Concierge', pieces: 1, weight: '0.6 kg', status: 'new', statusLabel: 'New' },
-      ],
+    const detailsByRecurring = {
+      'KT2271CRT': { jobNo: 'KT2271CRT', label: 'Job Details — Job #647',  client: 'Neogenomics', price: 'US$41.94' },
+      'KT2270CRT': { jobNo: 'KT2270CRT', label: 'Job Details — Job #646',  client: 'Neogenomics', price: 'US$38.10' },
+      'KT2269CRT': { jobNo: 'KT2269CRT', label: 'Job Details — Job #645',  client: 'Neogenomics', price: 'US$41.94' },
+      'KT2268CRT': { jobNo: 'KT2268CRT', label: 'Job Details — Job #644',  client: 'Pharma',      price: 'US$52.20' },
     };
 
-    function renderDepots() {
-      const list = document.getElementById('depotList');
-      list.innerHTML = depots.map(d => `
-        <div class="depot-item" data-depot="${d.id}" role="button" tabindex="0">
-          <span class="material-symbols-outlined">warehouse</span>
-          <div class="depot-info">
-            <span class="depot-name">${d.name}</span>
-            <span class="depot-meta">${d.code} · ${d.region}</span>
-          </div>
-          <span class="depot-badge">${d.jobCount}</span>
-        </div>
+    // ---------- RENDER ----------
+    function renderRecurringRows() {
+      const tbody = document.getElementById('recurringRows');
+      tbody.innerHTML = recurringJobs.map(r => `
+        <tr data-recurring="${r.id}" class="${r.selected ? 'selected' : ''}">
+          <td>${r.booked.split(' ').slice(0,3).join(' ')}<div class="muted">${r.booked.split(' ').slice(3).join(' ')}</div></td>
+          <td>${r.speed}</td>
+          <td>${r.name}</td>
+          <td>${r.client}</td>
+          <td>${r.nextDue.split(' ').slice(0,3).join(' ')}<div class="muted">${r.nextDue.split(' ').slice(3).join(' ')}</div></td>
+          <td class="icon-cell"><span class="material-symbols-outlined" style="font-size:16px;">delete</span></td>
+        </tr>
       `).join('');
-      document.getElementById('depotCount').textContent = `${depots.length} depots`;
-
-      list.querySelectorAll('.depot-item').forEach(el => {
-        el.addEventListener('click', () => selectDepot(el.dataset.depot));
+      tbody.querySelectorAll('tr').forEach(tr => {
+        tr.addEventListener('click', () => selectRecurring(tr.dataset.recurring));
       });
     }
 
-    function selectDepot(depotId) {
-      document.querySelectorAll('.depot-item').forEach(el => {
-        el.classList.toggle('selected', el.dataset.depot === depotId);
+    function selectRecurring(id) {
+      document.querySelectorAll('#recurringRows tr').forEach(tr => {
+        tr.classList.toggle('selected', tr.dataset.recurring === id);
       });
-      const depot = depots.find(d => d.id === depotId);
-      const runs = runsByDepot[depotId] || [];
-      document.getElementById('runListSubtitle').textContent = `— Inbound to ${depot.name} · ${runs.length} runs`;
+      const d = detailsByRecurring[id];
+      if (d) {
+        document.getElementById('midTitle').textContent = d.label;
+        document.getElementById('parentJobNo').textContent = d.jobNo;
+      }
+      renderJourney(id);
+    }
 
-      const content = document.getElementById('runListContent');
+    function renderJourney(recurringId) {
+      const list = document.getElementById('journeyList');
+      const runs = journeyByRecurring[recurringId] || [];
       if (runs.length === 0) {
-        content.innerHTML = `<div class="empty-state"><span class="material-symbols-outlined">inbox</span><div>No inbound runs scheduled.</div></div>`;
-      } else {
-        content.innerHTML = `
-          <div class="data-table__container">
-            <table class="data-table__table">
-              <thead>
-                <tr class="data-table__header-row">
-                  <th class="data-table__header-cell">Run</th>
-                  <th class="data-table__header-cell">Origin</th>
-                  <th class="data-table__header-cell">Mode</th>
-                  <th class="data-table__header-cell">ETA</th>
-                  <th class="data-table__header-cell" style="text-align:right;">Jobs</th>
-                  <th class="data-table__header-cell">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${runs.map(r => `
-                  <tr class="data-table__row" data-run="${r.id}">
-                    <td class="data-table__cell"><div class="primary">${r.id}</div><div class="secondary">${r.vehicle}</div></td>
-                    <td class="data-table__cell">${r.origin}</td>
-                    <td class="data-table__cell">${r.via}</td>
-                    <td class="data-table__cell mono">${r.eta}</td>
-                    <td class="data-table__cell" style="text-align:right; font-weight:600;">${r.jobCount}</td>
-                    <td class="data-table__cell"><span class="status-chip ${r.status}">${r.statusLabel}</span></td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
-        content.querySelectorAll('.data-table__row').forEach(row => {
-          row.addEventListener('click', () => selectRun(row.dataset.run));
+        list.innerHTML = `<li style="padding:20px; text-align:center; color:var(--text-muted); font-size:12px;">No runs yet.</li>`;
+        return;
+      }
+      list.innerHTML = runs.map(r => {
+        const dotClass = r.upcoming ? 'upcoming' : (r.status || 'completed');
+        const isUpcoming = !!r.upcoming;
+        const parentMarkup = isUpcoming
+          ? `<span style="color:var(--text-muted); font-style:italic;">${r.parentNo}</span>`
+          : `<a href="#" class="parent-link" data-parent="${r.parentNo}">${r.parentNo}</a>`;
+        const childChips = r.children.length
+          ? `<div class="child-chips">
+                ${r.children.map((c, idx) => `<span class="child-chip ${idx === 0 || idx === r.children.length - 1 ? 'suffix' : ''}">${c}</span>`).join('')}
+             </div>`
+          : '';
+        const statusMeta = isUpcoming
+          ? `<div class="journey-meta"><span class="stat"><span class="material-symbols-outlined" style="font-size:13px;">schedule</span> awaiting creation</span></div>`
+          : `<div class="journey-meta">
+                <span class="stat"><span class="material-symbols-outlined" style="font-size:13px;">route</span> ${r.miles} mi</span>
+                <span class="stat"><span class="material-symbols-outlined" style="font-size:13px;">${r.status === 'completed' ? 'check_circle' : 'autorenew'}</span> ${r.status === 'completed' ? 'Completed' : 'In progress'}</span>
+             </div>`;
+        return `
+          <li class="journey-item">
+            <div class="journey-dot ${dotClass}"></div>
+            <div class="journey-body">
+              <div class="journey-head">
+                <span class="journey-title">${r.date}</span>
+                <span class="journey-time">${isUpcoming ? 'Scheduled' : 'Created 00:00'}</span>
+              </div>
+              <div class="journey-parent-line">
+                <span class="label">Parent</span>
+                ${parentMarkup}
+              </div>
+              ${childChips}
+              ${statusMeta}
+            </div>
+          </li>`;
+      }).join('');
+
+      list.querySelectorAll('.parent-link').forEach(a => {
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          alert(`Would open per-job Delivery Journey for parent ${a.dataset.parent}`);
         });
-        if (runs.length > 0) selectRun(runs[0].id);
-      }
-    }
-
-    function selectRun(runId) {
-      document.querySelectorAll('#runListContent .data-table__row').forEach(r => {
-        r.classList.toggle('selected', r.dataset.run === runId);
       });
-      const jobs = jobsByRun[runId] || [];
-      document.getElementById('jobsSubtitle').textContent = `— ${runId} · ${jobs.length} jobs`;
-
-      const content = document.getElementById('jobsContent');
-      if (jobs.length === 0) {
-        content.innerHTML = `<div class="empty-state"><span class="material-symbols-outlined">inventory_2</span><div>No jobs on this run yet.</div><div style="font-size:11px;">(Sample data not populated — wire to real API.)</div></div>`;
-      } else {
-        content.innerHTML = `
-          <div class="data-table__container">
-            <table class="data-table__table">
-              <thead>
-                <tr class="data-table__header-row">
-                  <th class="data-table__header-cell">Job</th>
-                  <th class="data-table__header-cell">Sender</th>
-                  <th class="data-table__header-cell">Recipient</th>
-                  <th class="data-table__header-cell" style="text-align:right;">Pcs</th>
-                  <th class="data-table__header-cell">Weight</th>
-                  <th class="data-table__header-cell">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${jobs.map(j => `
-                  <tr class="data-table__row">
-                    <td class="data-table__cell"><div class="primary">${j.id}</div></td>
-                    <td class="data-table__cell">${j.sender}</td>
-                    <td class="data-table__cell">${j.recipient}</td>
-                    <td class="data-table__cell" style="text-align:right;">${j.pieces}</td>
-                    <td class="data-table__cell mono">${j.weight}</td>
-                    <td class="data-table__cell"><span class="status-chip ${j.status}">${j.statusLabel}</span></td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
-      }
     }
 
-    renderDepots();
-    selectDepot('AKL');
+    renderRecurringRows();
+    selectRecurring('KT2271CRT');
   </script>
 </body>
 </html>
