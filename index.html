@@ -454,6 +454,91 @@
     .mc-row .mc-value { font-size: 12px; color: var(--text-primary); }
 
     /* DELIVERY JOURNEY — right column (the new widget) */
+    /* Summary stats strip — top of Delivery Journey panel */
+    .journey-stats {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--divider);
+      background: linear-gradient(180deg, #f8fbff 0%, var(--surface) 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .stat-row { display: flex; gap: 8px; align-items: stretch; }
+    .stat-tile {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--divider);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+    .stat-tile .stat-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stat-tile .stat-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .stat-tile .stat-sub {
+      font-size: 10px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .stat-tile.accent-green .stat-value { color: #2e7d32; }
+    .stat-tile.accent-amber .stat-value { color: #ef6c00; }
+    .stat-tile.accent-red .stat-value   { color: #c62828; }
+    .stat-tile.accent-blue .stat-value  { color: var(--brand-blue-dark); }
+
+    .stat-breakdown {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--divider);
+      border: 1px solid var(--divider);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .stat-breakdown .bd-cell {
+      background: var(--surface);
+      padding: 6px 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .stat-breakdown .bd-value {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .stat-breakdown .bd-label {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-muted);
+    }
+    .bd-cell.total .bd-value     { color: var(--text-primary); }
+    .bd-cell.completed .bd-value { color: #2e7d32; }
+    .bd-cell.voided .bd-value    { color: #c62828; }
+    .bd-cell.pending .bd-value   { color: #ef6c00; }
+
     .journey-info-strip {
       background: var(--warn-bg);
       border-bottom: 1px solid var(--warn-border);
@@ -827,6 +912,8 @@
           <span class="header-action material-symbols-outlined">open_in_full</span>
         </div>
 
+        <div class="journey-stats" id="journeyStats"></div>
+
         <div class="journey-info-strip">
           <span class="material-symbols-outlined">history_edu</span>
           One entry per day the recurring schedule has run. Click a parent job link to open the per-job delivery journey.
@@ -896,6 +983,15 @@
       'KT2268CRT': { jobNo: 'KT2268CRT', label: 'Job Details — Job #644',  client: 'Pharma',      price: 'US$52.20' },
     };
 
+    // Per-recurring aggregate stats. In production these would be computed from history,
+    // but for the mockup we hand-tune them so reviewers can see the layout & ranges clearly.
+    const statsByRecurring = {
+      'KT2271CRT': { onTimeRate: 92, voided: 2, courier: 'CORT Rodriguez', courierRuns: '38 / 42 runs' },
+      'KT2270CRT': { onTimeRate: 88, voided: 1, courier: 'A. Lim',          courierRuns: '12 / 14 runs' },
+      'KT2269CRT': { onTimeRate: 100,voided: 0, courier: 'CORT Rodriguez', courierRuns: '8 / 8 runs' },
+      'KT2268CRT': { onTimeRate: 78, voided: 3, courier: 'J. Patel',        courierRuns: '15 / 22 runs' },
+    };
+
     // ---------- RENDER ----------
     function renderRecurringRows() {
       const tbody = document.getElementById('recurringRows');
@@ -926,7 +1022,48 @@
       renderJourney(id);
     }
 
+    function renderStats(recurringId) {
+      const runs = journeyByRecurring[recurringId] || [];
+      const stats = statsByRecurring[recurringId] || { onTimeRate: 0, voided: 0, courier: '—', courierRuns: '' };
+      const completed = runs.filter(r => r.status === 'completed').length;
+      const pending = runs.filter(r => r.upcoming || r.status === 'in-progress').length;
+      const voided = stats.voided;
+      const total = completed + pending + voided;
+      const recurringRow = recurringJobs.find(r => r.id === recurringId);
+      const nextDue = recurringRow ? recurringRow.nextDue : '—';
+
+      const onTimeClass = stats.onTimeRate >= 90 ? 'accent-green' : (stats.onTimeRate >= 80 ? 'accent-amber' : 'accent-red');
+
+      const html = `
+        <div class="stat-breakdown">
+          <div class="bd-cell total"><div class="bd-value">${total}</div><div class="bd-label">Total</div></div>
+          <div class="bd-cell completed"><div class="bd-value">${completed}</div><div class="bd-label">Completed</div></div>
+          <div class="bd-cell voided"><div class="bd-value">${voided}</div><div class="bd-label">Voided</div></div>
+          <div class="bd-cell pending"><div class="bd-value">${pending}</div><div class="bd-label">Pending</div></div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-tile ${onTimeClass}">
+            <span class="stat-label">On-time delivery</span>
+            <span class="stat-value">${stats.onTimeRate}%</span>
+            <span class="stat-sub">completed before due time</span>
+          </div>
+          <div class="stat-tile accent-blue">
+            <span class="stat-label">Next due</span>
+            <span class="stat-value">${nextDue.split(' ').slice(0,3).join(' ')}</span>
+            <span class="stat-sub">${nextDue.split(' ').slice(3).join(' ') || '—'}</span>
+          </div>
+        </div>
+        <div class="stat-tile" title="Courier appearing on the most runs of this recurring schedule">
+          <span class="stat-label">Most frequent courier</span>
+          <span class="stat-value" style="font-size: 14px;">${stats.courier}</span>
+          <span class="stat-sub">${stats.courierRuns}</span>
+        </div>
+      `;
+      document.getElementById('journeyStats').innerHTML = html;
+    }
+
     function renderJourney(recurringId) {
+      renderStats(recurringId);
       const list = document.getElementById('journeyList');
       const runs = journeyByRecurring[recurringId] || [];
       if (runs.length === 0) {
