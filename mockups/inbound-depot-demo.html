@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inbound Depot Demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, system-ui, -apple-system, sans-serif; background:#f4f2f1; color:#0d0c2c; }
+    .topbar { height: 52px; background:#0d0c2c; color:#fff; display:flex; align-items:center; padding:0 18px; gap:14px; }
+    .logo { font-weight: 800; letter-spacing:-0.3px; }
+    .pill { font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:rgba(59,199,244,.15); color:#7fddf7; border:1px solid rgba(59,199,244,.3); }
+    .subbar { height: 42px; background:#fff; border-bottom:1px solid #e4e2e0; display:flex; align-items:center; padding:0 18px; gap:10px; }
+    .chip { font-size:11px; font-weight:700; padding:5px 10px; border-radius:999px; border:1px solid #d8d5d2; background:#fff; color:#6e6d80; }
+    .chip.on { background:#eef1ff; border-color:#2a4eff; color:#2a4eff; }
+    .layout { display:grid; grid-template-columns: 280px 380px 1fr; gap:12px; padding:12px; height: calc(100vh - 94px); }
+    .panel { background:#fff; border:1px solid #e4e2e0; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; min-height:0; }
+    .hd { padding:14px 16px 10px; border-bottom:1px solid #f0eeec; display:flex; align-items:center; justify-content:space-between; }
+    .hd h3 { margin:0; font-size:13px; }
+    .meta { font-size:10px; color:#9997a3; font-weight:600; text-transform:uppercase; letter-spacing:.08em; }
+    .body { overflow:auto; }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; padding:8px 12px; font-size:9px; color:#9997a3; text-transform:uppercase; letter-spacing:.08em; border-bottom:1px solid #ece9e6; background:#fff; position:sticky; top:0; }
+    td { padding:10px 12px; font-size:12px; border-bottom:1px solid #f4f2f1; vertical-align:top; }
+    tr.clickable { cursor:pointer; }
+    tr.clickable:hover td { background:#faf9f8; }
+    tr.active td { background:#eef1ff; }
+    tr.active td:first-child { box-shadow: inset 3px 0 0 #2a4eff; }
+    .depot-name { font-weight:700; }
+    .depot-sub { font-size:10px; color:#9997a3; margin-top:2px; }
+    .count { font-weight:800; color:#2a4eff; }
+    .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:999px; font-size:10px; font-weight:700; }
+    .badge.inbound { color:#0d8cb5; background:#def5fd; }
+    .badge.live { color:#0d7a3f; background:#d0f1e0; }
+    .badge.pending { color:#b85a0d; background:#ffe6d1; }
+    .route { font-weight:700; }
+    .muted { color:#9997a3; font-size:10px; }
+    .jobs-list { padding:12px; display:grid; gap:10px; }
+    .job { border:1px solid #ece9e6; border-radius:12px; padding:12px; }
+    .job-top { display:flex; justify-content:space-between; gap:10px; }
+    .job-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight:800; color:#2a4eff; font-size:12px; }
+    .job-client { font-weight:700; margin-top:4px; }
+    .job-dest { font-size:11px; color:#6e6d80; margin-top:3px; }
+    .tag-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+    .tag { font-size:10px; font-weight:700; padding:3px 7px; border-radius:999px; background:#f4f2f1; color:#6e6d80; }
+    .tag.pickup { background:#b1e9fb; color:#0d8cb5; }
+    .tag.inbound { background:#d4dcff; color:#2a4eff; }
+    .summary { padding:12px 16px; border-top:1px solid #f0eeec; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .stat { background:#faf9f8; border-radius:10px; padding:10px; }
+    .stat .label { font-size:10px; color:#9997a3; text-transform:uppercase; letter-spacing:.06em; }
+    .stat .value { font-size:20px; font-weight:800; margin-top:3px; }
+    .notice { margin:12px; background:#fff8e8; border:1px solid #f4ddb2; color:#8d5e00; border-radius:12px; padding:10px 12px; font-size:11px; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo">RunViewer</div>
+    <div class="pill">Inbound Collection Depots demo</div>
+  </div>
+  <div class="subbar">
+    <span class="chip on">Inbound</span>
+    <span class="chip">Outbound</span>
+    <span class="chip">Combined</span>
+    <span class="chip on">Collection jobs only</span>
+  </div>
+
+  <div class="layout">
+    <section class="panel">
+      <div class="hd">
+        <div>
+          <h3>Overview</h3>
+          <div class="meta">Inbound collections by depot</div>
+        </div>
+      </div>
+      <div class="body">
+        <table>
+          <thead>
+            <tr><th>Depot</th><th>Jobs</th><th>Schedules</th></tr>
+          </thead>
+          <tbody id="overviewRows"></tbody>
+        </table>
+      </div>
+      <div class="summary">
+        <div class="stat"><div class="label">Inbound depots</div><div class="value" id="statDepots">0</div></div>
+        <div class="stat"><div class="label">Collection jobs</div><div class="value" id="statJobs">0</div></div>
+        <div class="stat"><div class="label">Selected depot</div><div class="value" id="statSelected" style="font-size:14px;line-height:1.2;">—</div></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="hd">
+        <div>
+          <h3>Run List</h3>
+          <div class="meta" id="runListMeta">Inbound schedules heading into depot</div>
+        </div>
+        <span class="badge inbound">Inbound</span>
+      </div>
+      <div class="body">
+        <table>
+          <thead>
+            <tr><th>Run</th><th>Route</th><th>Jobs</th><th>Status</th></tr>
+          </thead>
+          <tbody id="runRows"></tbody>
+        </table>
+      </div>
+      <div class="notice">Click a depot on the left. The run list and associated jobs update using the same inbound schedule assignment.</div>
+    </section>
+
+    <section class="panel">
+      <div class="hd">
+        <div>
+          <h3 id="jobsTitle">Associated Jobs</h3>
+          <div class="meta" id="jobsMeta">Inbound collection jobs for selected schedule</div>
+        </div>
+        <span class="badge live" id="jobsBadge">Live selection</span>
+      </div>
+      <div class="body jobs-list" id="jobCards"></div>
+    </section>
+  </div>
+
+<script>
+const depots = [
+  {
+    id: 'reno',
+    name: 'Reno consolidation response centre',
+    region: 'Northern California',
+    schedules: [
+      {
+        id: 'INB-RNO-01',
+        route: 'Sacramento → Reno Depot',
+        status: 'Live',
+        jobs: [
+          { id:'COL-10428', client:'UC Medical', from:'Sacramento, CA', to:'Reno consolidation response centre', window:'09:15–10:00', items:4 },
+          { id:'COL-10431', client:'Fresenius', from:'Davis, CA', to:'Reno consolidation response centre', window:'09:30–10:30', items:2 },
+          { id:'COL-10435', client:'Baxter', from:'Woodland, CA', to:'Reno consolidation response centre', window:'10:15–11:00', items:3 }
+        ]
+      },
+      {
+        id: 'INB-RNO-02',
+        route: 'Roseville → Reno Depot',
+        status: 'Pending',
+        jobs: [
+          { id:'COL-10442', client:'Quest Labs', from:'Roseville, CA', to:'Reno consolidation response centre', window:'11:00–11:45', items:1 },
+          { id:'COL-10444', client:'Cardinal', from:'Rocklin, CA', to:'Reno consolidation response centre', window:'11:10–12:00', items:5 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'aliso',
+    name: 'Aliso Viejo depot',
+    region: 'South California',
+    schedules: [
+      {
+        id: 'INB-ALI-01',
+        route: 'Riverside → Aliso Viejo Depot',
+        status: 'Live',
+        jobs: [
+          { id:'COL-10501', client:'BD Medical', from:'Riverside, CA', to:'Aliso Viejo depot', window:'09:00–09:40', items:2 },
+          { id:'COL-10507', client:'Bio-Rad', from:'Anaheim, CA', to:'Aliso Viejo depot', window:'09:20–10:20', items:6 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'fresno',
+    name: 'Fresno cross-dock depot',
+    region: 'Central Valley',
+    schedules: [
+      {
+        id: 'INB-FRE-01',
+        route: 'Modesto → Fresno Cross-Dock',
+        status: 'Pending',
+        jobs: [
+          { id:'COL-10522', client:'VWR', from:'Modesto, CA', to:'Fresno cross-dock depot', window:'12:00–12:45', items:3 }
+        ]
+      }
+    ]
+  }
+];
+
+let selectedDepotId = 'reno';
+let selectedRunId = 'INB-RNO-01';
+
+function jobCount(depot) { return depot.schedules.reduce((n, s) => n + s.jobs.length, 0); }
+function getDepot(id) { return depots.find(d => d.id === id); }
+function getRun(depot, runId) { return depot.schedules.find(s => s.id === runId) || depot.schedules[0]; }
+
+function renderOverview() {
+  const tbody = document.getElementById('overviewRows');
+  tbody.innerHTML = depots.map(depot => `
+    <tr class="clickable ${depot.id === selectedDepotId ? 'active' : ''}" onclick="selectDepot('${depot.id}')">
+      <td>
+        <div class="depot-name">${depot.name}</div>
+        <div class="depot-sub">${depot.region}</div>
+      </td>
+      <td class="count">${jobCount(depot)}</td>
+      <td>${depot.schedules.length}</td>
+    </tr>
+  `).join('');
+  document.getElementById('statDepots').textContent = depots.length;
+  document.getElementById('statJobs').textContent = depots.reduce((n,d)=> n + jobCount(d), 0);
+  document.getElementById('statSelected').textContent = getDepot(selectedDepotId).name;
+}
+
+function renderRuns() {
+  const depot = getDepot(selectedDepotId);
+  const tbody = document.getElementById('runRows');
+  document.getElementById('runListMeta').textContent = `${depot.name} · ${jobCount(depot)} inbound collection jobs`;
+  tbody.innerHTML = depot.schedules.map(run => `
+    <tr class="clickable ${run.id === selectedRunId ? 'active' : ''}" onclick="selectRun('${run.id}')">
+      <td>
+        <div class="route">${run.id}</div>
+        <div class="muted">Inbound collection schedule</div>
+      </td>
+      <td>
+        <div>${run.route}</div>
+        <div class="muted">Destination depot: ${depot.name}</div>
+      </td>
+      <td class="count">${run.jobs.length}</td>
+      <td><span class="badge ${run.status === 'Live' ? 'live' : 'pending'}">${run.status}</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderJobs() {
+  const depot = getDepot(selectedDepotId);
+  const run = getRun(depot, selectedRunId);
+  document.getElementById('jobsTitle').textContent = `${depot.name}`;
+  document.getElementById('jobsMeta').textContent = `${run.id} · ${run.route}`;
+  document.getElementById('jobsBadge').textContent = `${run.jobs.length} associated jobs`;
+  document.getElementById('jobCards').innerHTML = run.jobs.map(job => `
+    <div class="job">
+      <div class="job-top">
+        <div>
+          <div class="job-id">${job.id}</div>
+          <div class="job-client">${job.client}</div>
+          <div class="job-dest">Collection from ${job.from} → inbound to ${job.to}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="muted">Window</div>
+          <div style="font-weight:800;">${job.window}</div>
+        </div>
+      </div>
+      <div class="tag-row">
+        <span class="tag pickup">Collection</span>
+        <span class="tag inbound">Inbound</span>
+        <span class="tag">${job.items} items</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectDepot(id) {
+  selectedDepotId = id;
+  selectedRunId = getDepot(id).schedules[0].id;
+  renderAll();
+}
+function selectRun(id) { selectedRunId = id; renderRuns(); renderJobs(); }
+function renderAll() { renderOverview(); renderRuns(); renderJobs(); }
+renderAll();
+</script>
+</body>
+</html>
