@@ -632,7 +632,40 @@
       font-size: 10px;
       color: var(--text-muted);
       white-space: nowrap;
+      text-align: right;
     }
+    .pod-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 1px;
+      font-size: 10px;
+      line-height: 1.3;
+      text-align: right;
+      min-width: 0;
+    }
+    .pod-block .pod-label {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .pod-block .pod-time {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+    .pod-block .pod-name {
+      color: var(--text-secondary);
+      white-space: nowrap;
+      max-width: 110px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pod-block.dimmed .pod-time,
+    .pod-block.dimmed .pod-name { color: var(--text-muted); font-style: italic; font-weight: 500; }
     .journey-parent-line {
       margin-top: 6px;
       font-size: 12px;
@@ -972,11 +1005,12 @@
     // Children: LHP (linehaul pickup), LH1..LH4 (linehaul legs), DEL (delivery).
     const childSuffixes = ['LHP', 'LH1', 'LH2', 'LH3', 'LH4', 'DEL'];
 
-    function makeRun(date, parentNo, status) {
+    function makeRun(date, parentNo, status, pod) {
       return {
         date, parentNo, status,
         children: childSuffixes.map(s => `${parentNo}${s}`),
         miles: 503,
+        pod: pod || null,
       };
     }
 
@@ -984,24 +1018,24 @@
       // Newest first (most recent at top)
       'KT2271CRT': [
         makeRun('Jun 24, 2026', 'P1234', 'in-progress'),
-        makeRun('Jun 21, 2026', 'P1198', 'completed'),
-        makeRun('Jun 20, 2026', 'P1187', 'completed'),
-        makeRun('Jun 19, 2026', 'P1172', 'completed'),
-        makeRun('Jun 18, 2026', 'P1156', 'completed'),
-        makeRun('Jun 17, 2026', 'P1141', 'completed'),
-        makeRun('Jun 14, 2026', 'P1102', 'completed'),
-        makeRun('Jun 13, 2026', 'P1089', 'completed'),
-        { date: 'Jun 25, 2026', parentNo: '— pending —', status: 'upcoming', children: [], miles: 503, upcoming: true },
+        makeRun('Jun 21, 2026', 'P1198', 'completed', { date: 'Jun 21, 2026', time: '14:32 PDT', name: 'L. Bennett' }),
+        makeRun('Jun 20, 2026', 'P1187', 'completed', { date: 'Jun 20, 2026', time: '13:58 PDT', name: 'M. Chen' }),
+        makeRun('Jun 19, 2026', 'P1172', 'completed', { date: 'Jun 19, 2026', time: '15:11 PDT', name: 'L. Bennett' }),
+        makeRun('Jun 18, 2026', 'P1156', 'completed', { date: 'Jun 18, 2026', time: '14:05 PDT', name: 'R. Singh' }),
+        makeRun('Jun 17, 2026', 'P1141', 'completed', { date: 'Jun 17, 2026', time: '13:44 PDT', name: 'L. Bennett' }),
+        makeRun('Jun 14, 2026', 'P1102', 'completed', { date: 'Jun 14, 2026', time: '14:21 PDT', name: 'M. Chen' }),
+        makeRun('Jun 13, 2026', 'P1089', 'completed', { date: 'Jun 13, 2026', time: '15:02 PDT', name: 'L. Bennett' }),
+        { date: 'Jun 25, 2026', parentNo: '— pending —', status: 'upcoming', children: [], miles: 503, upcoming: true, pod: null },
       ],
       'KT2270CRT': [
-        makeRun('Jun 23, 2026', 'P1212', 'completed'),
-        makeRun('Jun 18, 2026', 'P1144', 'completed'),
+        makeRun('Jun 23, 2026', 'P1212', 'completed', { date: 'Jun 23, 2026', time: '11:18 PDT', name: 'A. Lopez' }),
+        makeRun('Jun 18, 2026', 'P1144', 'completed', { date: 'Jun 18, 2026', time: '11:42 PDT', name: 'A. Lopez' }),
       ],
       'KT2269CRT': [
-        makeRun('Jun 22, 2026', 'P1200', 'completed'),
+        makeRun('Jun 22, 2026', 'P1200', 'completed', { date: 'Jun 22, 2026', time: '09:47 PDT', name: 'D. Hughes' }),
       ],
       'KT2268CRT': [
-        makeRun('Jun 21, 2026', 'P1190', 'completed'),
+        makeRun('Jun 21, 2026', 'P1190', 'completed', { date: 'Jun 21, 2026', time: '16:20 PDT', name: 'S. Patel' }),
       ],
     };
 
@@ -1143,7 +1177,13 @@
             <div class="journey-body">
               <div class="journey-head">
                 <span class="journey-title">${r.date}</span>
-                <span class="journey-time">${isUpcoming ? 'Scheduled' : 'Created 00:00'}</span>
+                ${isUpcoming
+                  ? `<div class="pod-block dimmed"><span class="pod-label">POD</span><span class="pod-time">— scheduled —</span></div>`
+                  : (r.pod
+                      ? `<div class="pod-block"><span class="pod-label">POD</span><span class="pod-time">${r.pod.date} · ${r.pod.time}</span><span class="pod-name">${r.pod.name}</span></div>`
+                      : `<div class="pod-block dimmed"><span class="pod-label">POD</span><span class="pod-time">— awaiting POD —</span></div>`
+                  )
+                }
               </div>
               <div class="journey-parent-line">
                 <span class="label">Parent</span>
