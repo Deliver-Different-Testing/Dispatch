@@ -941,6 +941,13 @@
 
         <div class="journey-stats" id="journeyStats"></div>
 
+        <div class="journey-info-strip">
+          <span class="material-symbols-outlined">history_edu</span>
+          One entry per day the recurring schedule has run. Click a parent job link to open the per-job delivery journey.
+        </div>
+
+        <ul class="journey-list" id="journeyList"></ul>
+
         <div class="journey-footer">
           <div class="footer-meta" id="footerMeta">—</div>
           <a href="#" class="footer-link" id="viewRunsLink">
@@ -1107,6 +1114,53 @@
     function renderJourney(recurringId) {
       renderStats(recurringId);
       renderFooter(recurringId);
+      const list = document.getElementById('journeyList');
+      const runs = journeyByRecurring[recurringId] || [];
+      if (runs.length === 0) {
+        list.innerHTML = `<li style="padding:20px; text-align:center; color:var(--text-muted); font-size:12px;">No runs yet.</li>`;
+        return;
+      }
+      list.innerHTML = runs.map(r => {
+        const dotClass = r.upcoming ? 'upcoming' : (r.status || 'completed');
+        const isUpcoming = !!r.upcoming;
+        const parentMarkup = isUpcoming
+          ? `<span style="color:var(--text-muted); font-style:italic;">${r.parentNo}</span>`
+          : `<a href="#" class="parent-link" data-parent="${r.parentNo}">${r.parentNo}</a>`;
+        const childChips = r.children.length
+          ? `<div class="child-chips">
+                ${r.children.map((c, idx) => `<span class="child-chip ${idx === 0 || idx === r.children.length - 1 ? 'suffix' : ''}">${c}</span>`).join('')}
+             </div>`
+          : '';
+        const statusMeta = isUpcoming
+          ? `<div class="journey-meta"><span class="stat"><span class="material-symbols-outlined" style="font-size:13px;">schedule</span> awaiting creation</span></div>`
+          : `<div class="journey-meta">
+                <span class="stat"><span class="material-symbols-outlined" style="font-size:13px;">route</span> ${r.miles} mi</span>
+                <span class="stat"><span class="material-symbols-outlined" style="font-size:13px;">${r.status === 'completed' ? 'check_circle' : 'autorenew'}</span> ${r.status === 'completed' ? 'Completed' : 'In progress'}</span>
+             </div>`;
+        return `
+          <li class="journey-item">
+            <div class="journey-dot ${dotClass}"></div>
+            <div class="journey-body">
+              <div class="journey-head">
+                <span class="journey-title">${r.date}</span>
+                <span class="journey-time">${isUpcoming ? 'Scheduled' : 'Created 00:00'}</span>
+              </div>
+              <div class="journey-parent-line">
+                <span class="label">Parent</span>
+                ${parentMarkup}
+              </div>
+              ${childChips}
+              ${statusMeta}
+            </div>
+          </li>`;
+      }).join('');
+
+      list.querySelectorAll('.parent-link').forEach(a => {
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          alert(`Would open per-job Delivery Journey for parent ${a.dataset.parent}`);
+        });
+      });
     }
 
     renderRecurringRows();
