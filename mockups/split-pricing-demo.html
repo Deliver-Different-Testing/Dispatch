@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Split Pricing Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand-blue:#1e88e5; --brand-blue-dark:#1565c0;
+    --cyan:#26bde2; --cyan-dark:#17a8cc;
+    --app-bg:#eef1f5; --surface:#fff; --surface-low:#fafbfc; --surface-alt:#f4f6f8;
+    --divider:rgba(0,0,0,.09); --divider-strong:rgba(0,0,0,.14);
+    --text-primary:rgba(0,0,0,.87); --text-secondary:rgba(0,0,0,.6); --text-muted:rgba(0,0,0,.42);
+    --green:#2e7d32; --green-bg:#e9f7ef; --green-tile:#cdeddb;
+    --orange:#ef6c00; --orange-bg:#fff4e6; --orange-tile:#ffe0b2;
+    --purple:#5e35b1; --purple-bg:#eeeaf8; --purple-tile:#ddd4f2;
+    --red:#c62828; --red-bg:#fdecea;
+    --amber:#ff8f00;
+    --lock-bg:#f1f3f5; --lock-border:#d6dbe0;
+    --radius:8px; --radius-sm:4px; --radius-full:9999px;
+    --shadow-modal:0 12px 40px rgba(0,0,0,.22), 0 2px 8px rgba(0,0,0,.10);
+    --shadow-card:0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    --col-item:190px; --col-rev:132px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--app-bg);color:var(--text-primary);
+    font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px}
+  .ic{width:1.25em;height:1.25em;flex:0 0 auto;display:inline-block;vertical-align:middle;
+    fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* ---------- mockup harness ---------- */
+  .harness{background:#263238;color:#eceff1;padding:10px 16px;display:flex;flex-wrap:wrap;
+    gap:8px 18px;align-items:center;position:sticky;top:env(safe-area-inset-top,0px);z-index:60}
+  .harness .tag{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+    opacity:.6;margin-right:4px}
+  .hgroup{display:flex;align-items:center;gap:6px}
+  .hgroup>label{font-size:11px;opacity:.75;font-weight:600}
+  .seg{display:inline-flex;background:rgba(255,255,255,.1);border-radius:var(--radius-full);padding:2px}
+  .seg button{appearance:none;border:0;background:transparent;color:#cfd8dc;font:inherit;font-size:11px;
+    font-weight:600;padding:4px 11px;border-radius:var(--radius-full);cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--cyan);color:#06323d}
+  .seg button:focus-visible{outline:2px solid #fff;outline-offset:1px}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;cursor:pointer;opacity:.9}
+  .chk input{accent-color:var(--cyan);width:14px;height:14px;cursor:pointer}
+
+  /* ---------- app chrome ---------- */
+  .appbar{height:44px;background:var(--brand-blue);color:#fff;display:flex;align-items:center;
+    padding:0 18px;gap:12px;font-size:13px;font-weight:500}
+  .appbar .logo{font-weight:800;letter-spacing:.6px;font-size:16px}
+  .appbar .sep{opacity:.55}
+  .appbar .crumb{opacity:.85}
+  .appbar .pill{background:#f4c430;color:#000;font-size:9px;font-weight:700;padding:3px 9px;
+    border-radius:var(--radius-full);letter-spacing:.6px;text-transform:uppercase}
+  .stage{padding:28px 16px 56px;display:flex;justify-content:center}
+
+  /* ---------- modal ---------- */
+  .modal{background:var(--surface);border-radius:12px;box-shadow:var(--shadow-modal);
+    width:100%;max-width:var(--modal-max,1120px);overflow:hidden;transition:max-width .25s ease}
+  .modal-head{background:var(--cyan);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:13px}
+  .modal-head .tile{width:36px;height:36px;border-radius:var(--radius);background:rgba(255,255,255,.22);
+    display:grid;place-items:center;flex:0 0 auto}
+  .modal-head .tile .ic{width:20px;height:20px}
+  .modal-head h1{margin:0;font-size:17px;font-weight:700;letter-spacing:-.1px}
+  .modal-head p{margin:2px 0 0;font-size:12px;opacity:.92;font-weight:500}
+  .modal-head .x{margin-left:auto;background:transparent;border:0;color:#fff;cursor:pointer;
+    width:30px;height:30px;border-radius:50%;display:grid;place-items:center;opacity:.9}
+  .modal-head .x:hover{background:rgba(255,255,255,.18)}
+  .modal-body{padding:18px;display:flex;flex-direction:column;gap:16px;
+    max-height:calc(100vh - 210px);overflow-y:auto}
+
+  /* ---------- summary cards ---------- */
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .stat{border-radius:var(--radius);padding:14px 15px;display:flex;align-items:center;gap:13px;position:relative}
+  .stat.rev{background:var(--green-bg)} .stat.cost{background:var(--orange-bg)} .stat.gp{background:var(--purple-bg)}
+  .stat .tile{width:40px;height:40px;border-radius:var(--radius);display:grid;place-items:center;flex:0 0 auto}
+  .stat.rev .tile{background:var(--green-tile);color:var(--green)}
+  .stat.cost .tile{background:var(--orange-tile);color:var(--orange)}
+  .stat.gp .tile{background:var(--purple-tile);color:var(--purple)}
+  .stat .tile .ic{width:21px;height:21px}
+  .stat .k{font-size:12px;color:var(--text-secondary);font-weight:600}
+  .stat .v{font-size:21px;font-weight:700;letter-spacing:-.4px;margin-top:1px}
+  .stat .mbadge{position:absolute;right:14px;bottom:11px;background:var(--amber);color:#3d2200;
+    font-size:9px;font-weight:800;letter-spacing:.5px;padding:3px 8px;border-radius:var(--radius-full)}
+
+  /* ---------- banner ---------- */
+  .banner{background:#e4f6fb;border:1px solid #b8e6f2;border-radius:var(--radius);
+    padding:12px 14px;font-size:12.5px;line-height:1.55;color:#0f4d5c;display:flex;gap:10px}
+  .banner .ic{width:17px;height:17px;margin-top:1px}
+
+  /* ---------- section heading ---------- */
+  .sechead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .sechead h2{margin:0;font-size:15px;font-weight:700}
+  .count{background:var(--surface-alt);color:var(--text-secondary);font-size:9.5px;font-weight:700;
+    letter-spacing:.7px;padding:3px 8px;border-radius:var(--radius-full);text-transform:uppercase}
+  .btn{appearance:none;border:0;font:inherit;font-weight:600;cursor:pointer;border-radius:var(--radius-full);
+    display:inline-flex;align-items:center;gap:6px;padding:8px 16px;font-size:12.5px}
+  .btn .ic{width:16px;height:16px}
+  .btn-primary{background:var(--brand-blue);color:#fff}
+  .btn-primary:hover{background:var(--brand-blue-dark)}
+  .btn-ghost{background:transparent;color:var(--text-secondary);border:1px solid var(--divider-strong)}
+  .btn-ghost:hover{background:var(--surface-alt)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn:focus-visible{outline:2px solid var(--brand-blue);outline-offset:2px}
+  .push{margin-left:auto}
+
+  /* ---------- leg strip ---------- */
+  .legstrip{display:flex;flex-wrap:wrap;gap:10px}
+  .legcard{flex:1 1 228px;max-width:340px}
+  .legcard{border:1px solid var(--divider);border-left:3px solid var(--leg-hue,#90a4ae);
+    border-radius:var(--radius);padding:11px 13px;background:var(--surface-low);min-width:0}
+  .legcard .top{display:flex;align-items:center;gap:7px;margin-bottom:2px}
+  .legcard .badge{background:var(--leg-hue,#90a4ae);color:#fff;font-size:9.5px;font-weight:800;
+    letter-spacing:.5px;padding:2px 7px;border-radius:var(--radius-sm)}
+  .legcard .job{font-weight:700;font-size:13px}
+  .legcard .driver{font-size:12px;color:var(--text-secondary);font-weight:500;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .legcard .driver.unassigned{color:var(--orange);font-weight:600}
+  .legcard .figs{display:flex;gap:12px;margin-top:9px;flex-wrap:wrap}
+  .legcard .fig .k{font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);font-weight:700}
+  .legcard .fig .v{font-size:13.5px;font-weight:700}
+  .sharectl{display:flex;align-items:center;gap:5px;margin-top:9px;
+    padding-top:9px;border-top:1px dashed var(--divider)}
+  .sharectl label{font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);font-weight:700}
+  .legcard .lockchip{display:inline-flex;align-items:center;gap:4px;background:var(--lock-bg);
+    border:1px solid var(--lock-border);color:var(--text-secondary);font-size:10px;font-weight:700;
+    padding:2px 7px;border-radius:var(--radius-sm);margin-top:8px}
+  .legcard .lockchip .ic{width:12px;height:12px}
+
+  /* ---------- inputs ---------- */
+  input.cell{width:100%;font:inherit;font-size:13px;font-weight:600;text-align:right;
+    padding:6px 8px;border:1px solid var(--divider-strong);border-radius:var(--radius-sm);
+    background:var(--surface);color:var(--text-primary);font-variant-numeric:tabular-nums}
+  input.cell:hover:not(:disabled){border-color:var(--brand-blue)}
+  input.cell:focus{outline:2px solid var(--brand-blue);outline-offset:-1px;border-color:var(--brand-blue)}
+  input.cell:disabled{background:var(--lock-bg);border-color:var(--lock-border);
+    color:var(--text-muted);cursor:not-allowed}
+  input.cell.ovr{border-color:var(--amber);background:#fffdf5}
+  input.mini{width:62px;font-size:12px;padding:4px 6px}
+  input.name{text-align:left;font-weight:600;border-color:transparent;background:transparent;width:100%}
+  input.name:hover:not(:disabled){border-color:var(--divider-strong);background:var(--surface)}
+
+  /* ---------- grid ---------- */
+  .gridwrap{border:1px solid var(--divider);border-radius:var(--radius);overflow:hidden}
+  .gridscroll{overflow-x:auto}
+  table.grid{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content}
+  table.grid th,table.grid td{padding:9px 11px;text-align:right;white-space:nowrap;
+    border-bottom:1px solid var(--divider);background:var(--surface)}
+  table.grid thead th{background:var(--surface-alt);font-size:10px;font-weight:700;
+    letter-spacing:.7px;text-transform:uppercase;color:var(--text-secondary);
+    position:sticky;top:0;z-index:3}
+  table.grid th.l,table.grid td.l{text-align:left}
+  th.f1,td.f1{position:sticky;left:0;z-index:2;width:var(--col-item);min-width:var(--col-item)}
+  th.f2,td.f2{position:sticky;left:var(--col-item);z-index:2;width:var(--col-rev);min-width:var(--col-rev);
+    box-shadow:1px 0 0 var(--divider-strong)}
+  thead th.f1,thead th.f2{z-index:4;background:var(--surface-alt)}
+  tbody tr:hover td{background:var(--surface-low)}
+  tbody tr.sub td{background:#f7fbfd}
+  tbody tr:last-child td{border-bottom:0}
+  tfoot td{background:var(--surface-alt);font-weight:800;border-top:2px solid var(--divider-strong);
+    border-bottom:0;position:sticky;bottom:0}
+  tfoot td.f1,tfoot td.f2{z-index:3}
+  .itemcell{display:flex;align-items:center;gap:9px;min-width:0}
+  .itemcell .ico{width:26px;height:26px;border-radius:var(--radius-sm);background:var(--surface-alt);
+    color:var(--text-secondary);display:grid;place-items:center;flex:0 0 auto}
+  .itemcell .ico .ic{width:15px;height:15px}
+  .legcell{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+  .legcell .sub{font-size:10.5px;color:var(--text-muted);font-weight:600;font-variant-numeric:tabular-nums}
+  .legcell .was{font-size:10px;color:var(--amber);font-weight:700;display:flex;align-items:center;gap:3px}
+  .legcell .was button{appearance:none;border:0;background:transparent;color:var(--amber);
+    cursor:pointer;padding:0;display:grid;place-items:center}
+  .legcell .was .ic{width:12px;height:12px}
+  .colhead{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+  .colhead .who{font-size:9.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--text-muted)}
+  .colhead .who.locked{color:var(--orange)}
+  .pct{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:var(--radius-full)}
+  .pct.pos{background:#d7f0dd;color:#1b5e20} .pct.neg{background:#fbdcd9;color:#a52318}
+  .pct.zero{background:var(--surface-alt);color:var(--text-muted)}
+  .sharebtn{appearance:none;border:1px solid var(--divider-strong);background:var(--surface);
+    font:inherit;font-size:11px;font-weight:700;padding:4px 9px;border-radius:var(--radius-full);
+    cursor:pointer;color:var(--text-secondary);font-variant-numeric:tabular-nums}
+  .sharebtn:hover{border-color:var(--brand-blue);color:var(--brand-blue)}
+  .sharebtn[aria-expanded="true"]{background:var(--brand-blue);border-color:var(--brand-blue);color:#fff}
+  .iconbtn{appearance:none;border:0;background:transparent;cursor:pointer;color:var(--text-muted);
+    width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center}
+  .iconbtn:hover{background:var(--surface-alt);color:var(--red)}
+  .iconbtn:disabled{opacity:.3;cursor:not-allowed}
+  .iconbtn .ic{width:16px;height:16px}
+  .subedit{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:2px 0}
+  .subedit .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;
+    color:var(--text-muted);font-weight:700}
+  .subedit .pair{display:flex;align-items:center;gap:5px}
+  .linkbtn{appearance:none;border:0;background:transparent;color:var(--brand-blue);font:inherit;
+    font-size:11.5px;font-weight:700;cursor:pointer;padding:0;text-decoration:underline}
+
+  .hint{font-size:11.5px;color:var(--text-muted);line-height:1.5}
+  .modal-foot{border-top:1px solid var(--divider);padding:13px 18px;display:flex;align-items:center;
+    gap:10px;background:var(--surface-low);flex-wrap:wrap}
+  .modal-foot .tally{font-size:12.5px;color:var(--text-secondary);font-weight:600}
+  .modal-foot .tally b{color:var(--text-primary)}
+  .warn{color:var(--red);font-weight:700}
+
+  /* ---------- notes ---------- */
+    .notes{max-width:1120px;margin:26px auto 0;background:var(--surface);border-radius:var(--radius);
+    box-shadow:var(--shadow-card);padding:18px 20px}
+  .notes h3{margin:0 0 4px;font-size:14px;font-weight:700}
+  .notes p.lede{margin:0 0 14px;font-size:12.5px;color:var(--text-secondary);line-height:1.6}
+  .notes ol{margin:0;padding-left:19px;display:flex;flex-direction:column;gap:9px}
+  .notes li{font-size:12.5px;line-height:1.6}
+  .notes code{background:var(--surface-alt);padding:1px 5px;border-radius:var(--radius-sm);font-size:11.5px}
+  .notes .ref{color:var(--text-muted);font-weight:600}
+
+  @media (max-width:640px){
+    .cards{grid-template-columns:1fr}
+    .modal-body{padding:14px;max-height:none}
+    .stage{padding:16px 0 40px}
+    .modal{border-radius:0}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <g id="i-trending"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></g>
+    <g id="i-truck"><rect x="1.5" y="6.5" width="12" height="9" rx="1.4"/><path d="M13.5 9.5h4l3 3v3h-7z"/><circle cx="6" cy="17.6" r="1.9"/><circle cx="17" cy="17.6" r="1.9"/></g>
+    <g id="i-coins"><ellipse cx="12" cy="6.5" rx="6.8" ry="2.8"/><path d="M5.2 6.5v5c0 1.6 3 2.8 6.8 2.8s6.8-1.2 6.8-2.8v-5"/><path d="M5.2 11.5v5c0 1.6 3 2.8 6.8 2.8s6.8-1.2 6.8-2.8v-5"/></g>
+    <g id="i-info"><circle cx="12" cy="12" r="8.6"/><path d="M12 11.2v5"/><path d="M12 7.7h.01"/></g>
+    <g id="i-plus"><path d="M12 5.2v13.6M5.2 12h13.6"/></g>
+    <g id="i-check"><circle cx="12" cy="12" r="8.6"/><polyline points="8 12.4 10.9 15.3 16 9"/></g>
+    <g id="i-close"><path d="M6.4 6.4l11.2 11.2M17.6 6.4L6.4 17.6"/></g>
+    <g id="i-box"><rect x="3.8" y="6.4" width="16.4" height="11.8" rx="1.6"/><path d="M3.8 10.4h16.4"/><path d="M12 6.4v4"/></g>
+    <g id="i-trash"><path d="M4.2 6.9h15.6"/><path d="M9.8 6.9V4.8h4.4v2.1"/><path d="M6.2 6.9l1 12.3h9.6l1-12.3"/></g>
+    <g id="i-undo"><path d="M4.4 9.2h10.8a4.9 4.9 0 010 9.8H9.2"/><polyline points="7.6 5.9 4.3 9.2 7.6 12.5"/></g>
+    <g id="i-lock"><rect x="4.4" y="10.2" width="15.2" height="9.4" rx="2"/><path d="M8.2 10.2V7.3a3.8 3.8 0 017.6 0v2.9"/></g>
+    <g id="i-chevron"><polyline points="9.5 5.5 16 12 9.5 18.5"/></g>
+    <g id="i-receipt"><path d="M5.2 3.2v17.6l2.3-1.4 2.3 1.4 2.2-1.4 2.2 1.4 2.3-1.4 2.3 1.4V3.2z"/><path d="M8.6 8.4h6.8M8.6 12h6.8M8.6 15.6h4"/></g>
+    <g id="i-split"><path d="M12 20.8v-6.2"/><path d="M12 14.6L6.4 9V4.6"/><path d="M12 14.6L17.6 9V4.6"/><polyline points="3.6 7.4 6.4 4.6 9.2 7.4"/><polyline points="14.8 7.4 17.6 4.6 20.4 7.4"/></g>
+  </defs>
+</svg>
+
+<div class="harness">
+  <span class="tag">Mockup controls</span>
+  <div class="hgroup"><label>Legs</label>
+    <div class="seg" id="segLegs">
+      <button type="button" data-n="2" aria-pressed="true">2</button>
+      <button type="button" data-n="3" aria-pressed="false">3</button>
+      <button type="button" data-n="4" aria-pressed="false">4</button>
+    </div>
+  </div>
+  <div class="hgroup"><label>Mode</label>
+    <div class="seg" id="segMode">
+      <button type="button" data-m="edit" aria-pressed="true">Edit (after split)</button>
+      <button type="button" data-m="split" aria-pressed="false">Confirm split</button>
+    </div>
+  </div>
+  <label class="chk"><input type="checkbox" id="cbInvoiced"> Invoiced to customer</label>
+  <label class="chk"><input type="checkbox" id="cbSettled"> Leg A settled</label>
+  <label class="chk"><input type="checkbox" id="cbRev" checked> Show leg revenue</label>
+  <button type="button" class="btn btn-ghost" id="btnReset"
+    style="color:#cfd8dc;border-color:rgba(255,255,255,.3);padding:5px 12px;font-size:11px">Reset</button>
+</div>
+
+<div class="appbar">
+  <span class="logo">DFRNT</span>
+  <span class="crumb">Dashboards</span><svg class="ic sep" aria-hidden="true"><use href="#i-chevron"/></svg>
+  <span>Search</span><span class="pill">Beta</span>
+</div>
+
+<div class="stage">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <div class="tile"><svg class="ic" id="headIcon" aria-hidden="true"><use href="#i-receipt"/></svg></div>
+      <div>
+        <h1 id="headTitle">Price Breakdown</h1>
+        <p id="headSub">KT4071V &middot; split across 2 legs</p>
+      </div>
+      <button class="x" type="button" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-close"/></svg></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="cards">
+        <div class="stat rev">
+          <div class="tile"><svg class="ic" aria-hidden="true"><use href="#i-trending"/></svg></div>
+          <div><div class="k">Total Revenue</div><div class="v num" id="sRev">US$114.00</div></div>
+        </div>
+        <div class="stat cost">
+          <div class="tile"><svg class="ic" aria-hidden="true"><use href="#i-truck"/></svg></div>
+          <div><div class="k">Total Cost</div><div class="v num" id="sCost">US$69.00</div></div>
+        </div>
+        <div class="stat gp">
+          <div class="tile"><svg class="ic" aria-hidden="true"><use href="#i-coins"/></svg></div>
+          <div><div class="k">Gross Profit</div><div class="v num" id="sGp">US$45.00</div></div>
+          <span class="mbadge num" id="sMargin">39.5% MARGIN</span>
+        </div>
+      </div>
+
+      <div class="banner" id="banner">
+        <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+        <span id="bannerText"></span>
+      </div>
+
+      <div>
+        <div class="sechead" style="margin-bottom:10px">
+          <h2 id="legsHeading">Legs</h2>
+          <span class="count" id="legShareTotal">Shares total 100%</span>
+        </div>
+        <div class="legstrip" id="legstrip"></div>
+      </div>
+
+      <div>
+        <div class="sechead" style="margin-bottom:10px">
+          <h2>Price items</h2>
+          <span class="count" id="itemCount">5 items</span>
+          <button class="btn btn-primary push" type="button" id="btnAdd">
+            <svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg> Add item
+          </button>
+        </div>
+        <div class="gridwrap">
+          <div class="gridscroll">
+            <table class="grid">
+              <thead><tr id="headRow"></tr></thead>
+              <tbody id="rows"></tbody>
+              <tfoot><tr id="footRow"></tr></tfoot>
+            </table>
+          </div>
+        </div>
+        <p class="hint" style="margin:9px 2px 0" id="gridHint"></p>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <span class="tally" id="tally"></span>
+      <button class="btn btn-ghost push" type="button">Cancel</button>
+      <button class="btn btn-primary" type="button" id="btnPrimary">
+        <svg class="ic" id="primaryIcon" aria-hidden="true"><use href="#i-check"/></svg> <span id="primaryLabel">Save &amp; Close</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="notes">
+  <h3>What this mockup is testing</h3>
+  <p class="lede">The proposed replacement for the parent job&rsquo;s Price Breakdown once a job has been
+    split. Figures are the real staging job KT4070V / KT4071V (US$114.00, 80/20 by road distance), so every
+    number here should match the screenshots. The negative fuel cost is the known staging rating quirk and is
+    carried through deliberately.</p>
+  <ol>
+    <li><b>The parent keeps its own five rows.</b> No <code>Part A</code> / <code>Part B</code> expansion &mdash;
+      cost is broken out into a column per leg instead. <span class="ref">Spec &sect;3</span></li>
+    <li><b>Reconciliation is visible.</b> The leg cost column totals are exactly each child job&rsquo;s Total
+      Cost; the Revenue total is exactly the headline price. Nothing can drift. <span class="ref">&sect;3</span></li>
+    <li><b>Edit a Revenue cell</b> &rarr; every leg&rsquo;s revenue re-derives by share and the header updates.
+      <b>Edit a leg cost cell</b> &rarr; no revenue figure moves anywhere. Zero is valid, so a driver can be
+      left unpaid for an item. <span class="ref">&sect;4, &sect;6.1</span></li>
+    <li><b>Overridden costs</b> are flagged amber, show the derived value they replaced, and can be reset.
+      They survive share changes. <span class="ref">&sect;4.4</span></li>
+    <li><b>Per-item shares.</b> Click the share pill on any row to give a single charge its own split &mdash;
+      for a charge only one leg incurred. <span class="ref">&sect;3</span></li>
+    <li><b>Locking.</b> Tick <i>Invoiced</i> to lock the Revenue column; tick <i>Leg A settled</i> to lock just
+      that leg&rsquo;s cost column while the others stay live. Delivery locks nothing.
+      <span class="ref">&sect;6.5</span></li>
+    <li><b>3 and 4 legs.</b> The modal widens first; only then do the leg columns scroll, with Item and Revenue
+      frozen. <span class="ref">&sect;6.2</span></li>
+    <li><b>One component, two modes.</b> Switch to <i>Confirm split</i> for the pre-split view &mdash; same grid,
+      legs labelled by mileage rather than job number, and a <i>Confirm &amp; Split</i> action.
+      <span class="ref">&sect;7</span></li>
+    <li><b>Rounding.</b> Remainders go to the largest leg, so leg amounts always re-sum to the parent to the
+      cent. Try 3 legs and set a revenue of <code>10.00</code> to see it. <span class="ref">&sect;4.6</span></li>
+  </ol>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var NS = 'http://www.w3.org/2000/svg';
+  function ic(name){
+    var svg = document.createElementNS(NS,'svg');
+    svg.setAttribute('class','ic'); svg.setAttribute('aria-hidden','true');
+    var u = document.createElementNS(NS,'use');
+    u.setAttribute('href','#i-'+name);
+    svg.appendChild(u);
+    return svg;
+  }
+  function setIc(el, name){
+    var u = el.querySelector('use');
+    if(u) u.setAttribute('href','#i-'+name);
+  }
+
+  var HUES = {A:'#1e88e5', B:'#00897b', C:'#6d4c41', D:'#8e24aa'};
+  var DRIVERS = {A:'Dane DFRNT', B:'Unassigned', C:'Sam Whitiora', D:'Ana Leota'};
+  var LEGSETS = {
+    2:[{id:'A',miles:8,share:80},{id:'B',miles:2,share:20}],
+    3:[{id:'A',miles:6,share:60},{id:'B',miles:2,share:20},{id:'C',miles:2,share:20}],
+    4:[{id:'A',miles:5,share:50},{id:'B',miles:2,share:20},{id:'C',miles:2,share:20},{id:'D',miles:1,share:10}]
+  };
+  var SEED = [
+    {name:'Base',       revenue:64, cost:32},
+    {name:'Base Fuel',  revenue:16, cost:24},
+    {name:'Items',      revenue:20, cost:4},
+    {name:'Items Fuel', revenue:5,  cost:3},
+    {name:'Congestion', revenue:9,  cost:6}
+  ];
+
+  var S = {};
+  function reset(){
+    S = {legCount:2, mode:'edit', invoiced:false, settledA:false, showLegRev:true, openShare:null, items:[]};
+    S.legs = LEGSETS[2].map(function(l){ return {id:l.id, miles:l.miles, share:l.share}; });
+    S.items = SEED.map(function(s){ return mkItem(s.name, s.revenue, s.cost); });
+    document.getElementById('cbInvoiced').checked = false;
+    document.getElementById('cbSettled').checked = false;
+    document.getElementById('cbRev').checked = true;
+    press('segLegs','n',2); press('segMode','m','edit');
+  }
+  function mkItem(name, revenue, cost){
+    var it = {name:name, revenue:revenue, cost:cost, shares:null, ovr:{}};
+    return it;
+  }
+  function press(id, attr, val){
+    var wrap = document.getElementById(id);
+    Array.prototype.forEach.call(wrap.querySelectorAll('button'), function(b){
+      b.setAttribute('aria-pressed', String(b.dataset[attr] == val));
+    });
+  }
+
+  /* shares for an item: its own override map, else the leg shares */
+  function sharesOf(it){
+    var m = {};
+    S.legs.forEach(function(l){ m[l.id] = (it.shares && it.shares[l.id] != null) ? it.shares[l.id] : l.share; });
+    return m;
+  }
+  /* split an amount by shares, remainder to the largest share */
+  function allocate(amount, shares){
+    var cents = Math.round(amount*100), out = {}, sum = 0;
+    S.legs.forEach(function(l){ var v = Math.round(cents*(shares[l.id]||0)/100); out[l.id]=v; sum+=v; });
+    var diff = cents - sum;
+    if(diff !== 0 && S.legs.length){
+      var big = S.legs.slice().sort(function(a,b){ return (shares[b.id]||0)-(shares[a.id]||0); })[0];
+      out[big.id] += diff;
+    }
+    S.legs.forEach(function(l){ out[l.id] = out[l.id]/100; });
+    return out;
+  }
+  function legRev(it){ return allocate(it.revenue, sharesOf(it)); }
+  function legCostDerived(it){ return allocate(it.cost, sharesOf(it)); }
+  function legCost(it){
+    var d = legCostDerived(it), out = {};
+    S.legs.forEach(function(l){ out[l.id] = (it.ovr[l.id] != null) ? it.ovr[l.id] : d[l.id]; });
+    return out;
+  }
+  function itemCost(it){ var c = legCost(it), t=0; S.legs.forEach(function(l){ t += c[l.id]; }); return t; }
+
+  function money(n){ return 'US$' + (n<0 ? '-' : '') + Math.abs(n).toFixed(2); }
+  function plain(n){ return (n<0?'-':'') + Math.abs(n).toFixed(2); }
+  function pct(profit, revenue){
+    if(!revenue) return null;
+    var v = profit/revenue*100, r = Math.round(v*10)/10;
+    return (Math.abs(r - Math.round(r)) < 0.05) ? String(Math.round(r)) : r.toFixed(1);
+  }
+  function pctRow(profit, revenue){
+    if(!revenue) return null;
+    return String(Math.round(profit/revenue*100));
+  }
+  function pctEl(profit, revenue, row){
+    var p = row ? pctRow(profit, revenue) : pct(profit, revenue), s = document.createElement('span');
+    if(p === null){ s.className='pct zero'; s.textContent='—'; return s; }
+    s.className = 'pct ' + (profit < 0 ? 'neg' : profit > 0 ? 'pos' : 'zero');
+    s.textContent = p + '%';
+    return s;
+  }
+  function jobNo(id){ return 'KT4071V' + id; }
+  function isLocked(kind, legId){
+    if(S.mode === 'split') return false;
+    if(kind === 'revenue') return S.invoiced;
+    if(kind === 'cost') return legId === 'A' && S.settledA;
+    if(kind === 'share') return S.invoiced || S.settledA;
+    return false;
+  }
+
+  /* normalise leg shares to 100 when one is changed */
+  function setLegShare(id, val){
+    val = Math.max(0, Math.min(100, Math.round(val||0)));
+    var others = S.legs.filter(function(l){ return l.id !== id; });
+    if(!others.length) return;
+    var remain = 100 - val, prev = others.reduce(function(a,l){ return a + l.share; }, 0);
+    others.forEach(function(l){ l.share = prev > 0 ? Math.round(remain * l.share / prev) : Math.round(remain/others.length); });
+    S.legs.forEach(function(l){ if(l.id === id) l.share = val; });
+    var drift = 100 - S.legs.reduce(function(a,l){ return a + l.share; }, 0);
+    if(drift !== 0){
+      var target = others.slice().sort(function(a,b){ return b.share - a.share; })[0];
+      target.share += drift;
+    }
+  }
+
+  /* ---------- render ---------- */
+  function render(){
+    var isSplit = S.mode === 'split';
+    var n = S.legs.length;
+
+    document.getElementById('modal').style.setProperty('--modal-max',
+      (n === 2 ? 1120 : n === 3 ? 1275 : 1400) + 'px');
+
+    setIc(document.getElementById('headIcon'), isSplit ? 'split' : 'receipt');
+    document.getElementById('headTitle').textContent = isSplit ? 'Confirm Split Pricing' : 'Price Breakdown';
+    document.getElementById('headSub').textContent = isSplit
+      ? 'KT4070V · ' + money(totals().rev) + ' to divide across ' + n + ' legs'
+      : 'KT4071V · split across ' + n + ' legs';
+    document.getElementById('legsHeading').textContent = isSplit ? 'Overall split' : 'Legs';
+    document.getElementById('bannerText').innerHTML = isSplit
+      ? 'Split by road distance per leg. The job total stays <b>' + money(totals().rev) +
+        '</b> — splitting does not change what the client is invoiced.'
+      : 'Pricing for every leg is managed here, on the parent job. The child jobs show these figures read-only, ' +
+        'so the parent and its legs cannot drift out of sync.';
+    document.getElementById('primaryLabel').textContent = isSplit ? 'Confirm & Split' : 'Save & Close';
+    setIc(document.getElementById('primaryIcon'), isSplit ? 'split' : 'check');
+
+    var st = S.legs.reduce(function(a,l){ return a + l.share; }, 0);
+    var stEl = document.getElementById('legShareTotal');
+    stEl.textContent = 'Shares total ' + st + '%';
+    stEl.className = 'count' + (st !== 100 ? ' warn' : '');
+
+    renderLegs();
+    renderGrid();
+    renderTotals();
+  }
+
+  function renderLegs(){
+    var wrap = document.getElementById('legstrip');
+    wrap.textContent = '';
+    var isSplit = S.mode === 'split';
+
+    S.legs.forEach(function(leg){
+      var rev = 0, cost = 0;
+      S.items.forEach(function(it){ rev += legRev(it)[leg.id]; cost += legCost(it)[leg.id]; });
+      var profit = rev - cost;
+
+      var card = document.createElement('div');
+      card.className = 'legcard';
+      card.style.setProperty('--leg-hue', HUES[leg.id]);
+
+      var top = document.createElement('div'); top.className = 'top';
+      var b = document.createElement('span'); b.className = 'badge'; b.textContent = 'Leg ' + leg.id;
+      var j = document.createElement('span'); j.className = 'job';
+      j.textContent = isSplit ? leg.miles + ' mi' : jobNo(leg.id);
+      top.appendChild(b); top.appendChild(j);
+      card.appendChild(top);
+
+      var d = document.createElement('div');
+      var unassigned = DRIVERS[leg.id] === 'Unassigned';
+      d.className = 'driver' + (unassigned ? ' unassigned' : '');
+      d.textContent = isSplit ? 'road distance ' + leg.miles + ' mi' : DRIVERS[leg.id];
+      card.appendChild(d);
+
+      var figs = document.createElement('div'); figs.className = 'figs';
+      [['Revenue', money(rev)], ['Cost', money(cost)]].forEach(function(p){
+        var f = document.createElement('div'); f.className = 'fig';
+        var k = document.createElement('div'); k.className = 'k'; k.textContent = p[0];
+        var v = document.createElement('div'); v.className = 'v num'; v.textContent = p[1];
+        f.appendChild(k); f.appendChild(v); figs.appendChild(f);
+      });
+      var fm = document.createElement('div'); fm.className = 'fig';
+      var km = document.createElement('div'); km.className = 'k'; km.textContent = 'Margin';
+      fm.appendChild(km); fm.appendChild(pctEl(profit, rev));
+      figs.appendChild(fm);
+      card.appendChild(figs);
+
+      var sc = document.createElement('div'); sc.className = 'sharectl';
+      var lb = document.createElement('label'); lb.textContent = 'Share %';
+      lb.setAttribute('for', 'legshare-' + leg.id);
+      var inp = document.createElement('input');
+      inp.type = 'number'; inp.className = 'cell mini'; inp.id = 'legshare-' + leg.id;
+      inp.value = leg.share; inp.min = 0; inp.max = 100; inp.step = 1;
+      inp.disabled = isLocked('share');
+      inp.addEventListener('change', function(){
+        setLegShare(leg.id, parseFloat(inp.value));
+        render();
+      });
+      sc.appendChild(lb); sc.appendChild(inp);
+      card.appendChild(sc);
+
+      if(!isSplit && leg.id === 'A' && S.settledA){
+        var lc = document.createElement('div'); lc.className = 'lockchip';
+        lc.appendChild(ic('lock'));
+        lc.appendChild(document.createTextNode('Settled — cost locked'));
+        card.appendChild(lc);
+      }
+      wrap.appendChild(card);
+    });
+  }
+
+  function th(text, cls){
+    var e = document.createElement('th');
+    if(cls) e.className = cls;
+    if(text != null) e.textContent = text;
+    return e;
+  }
+
+  function renderGrid(){
+    var head = document.getElementById('headRow');
+    head.textContent = '';
+    head.appendChild(th('Item', 'l f1'));
+    head.appendChild(th('Revenue', 'f2'));
+    head.appendChild(th('Share'));
+    S.legs.forEach(function(leg){
+      var h = th(null);
+      var box = document.createElement('div'); box.className = 'colhead';
+      var t = document.createElement('span'); t.textContent = 'Leg ' + leg.id + ' cost';
+      var w = document.createElement('span'); w.className = 'who';
+      if(S.mode === 'split'){ w.textContent = leg.miles + ' mi'; }
+      else if(leg.id === 'A' && S.settledA){ w.className = 'who locked'; w.textContent = 'settled · locked'; }
+      else { w.textContent = DRIVERS[leg.id]; }
+      box.appendChild(t); box.appendChild(w); h.appendChild(box);
+      head.appendChild(h);
+    });
+    head.appendChild(th('Total cost'));
+    head.appendChild(th('Profit'));
+    head.appendChild(th('Margin'));
+    head.appendChild(th(''));
+
+    var body = document.getElementById('rows');
+    body.textContent = '';
+    var span = 7 + S.legs.length;
+
+    S.items.forEach(function(it, idx){
+      var tr = document.createElement('tr');
+      var lr = legRev(it), lc = legCost(it), ld = legCostDerived(it);
+      var tc = itemCost(it), profit = it.revenue - tc;
+
+      /* item name */
+      var tdN = document.createElement('td'); tdN.className = 'l f1';
+      var cell = document.createElement('div'); cell.className = 'itemcell';
+      var ico = document.createElement('div'); ico.className = 'ico';
+      ico.appendChild(ic('box'));
+      var nm = document.createElement('input');
+      nm.type = 'text'; nm.className = 'cell name'; nm.value = it.name;
+      nm.setAttribute('aria-label', 'Item name');
+      nm.addEventListener('change', function(){ it.name = nm.value || 'Untitled charge'; render(); });
+      cell.appendChild(ico); cell.appendChild(nm);
+      tdN.appendChild(cell); tr.appendChild(tdN);
+
+      /* revenue */
+      var tdR = document.createElement('td'); tdR.className = 'f2';
+      var ri = document.createElement('input');
+      ri.type = 'number'; ri.className = 'cell'; ri.step = '0.01'; ri.value = it.revenue.toFixed(2);
+      ri.disabled = isLocked('revenue');
+      ri.setAttribute('aria-label', it.name + ' revenue');
+      ri.addEventListener('change', function(){
+        it.revenue = Math.round((parseFloat(ri.value)||0)*100)/100; render();
+      });
+      tdR.appendChild(ri); tr.appendChild(tdR);
+
+      /* share pill */
+      var tdS = document.createElement('td');
+      var sb = document.createElement('button');
+      sb.type = 'button'; sb.className = 'sharebtn';
+      var sh = sharesOf(it);
+      sb.textContent = S.legs.map(function(l){ return sh[l.id]; }).join(' / ');
+      sb.setAttribute('aria-expanded', String(S.openShare === idx));
+      sb.addEventListener('click', function(){
+        S.openShare = (S.openShare === idx) ? null : idx; render();
+      });
+      tdS.appendChild(sb); tr.appendChild(tdS);
+
+      /* leg cost cells */
+      S.legs.forEach(function(leg){
+        var td = document.createElement('td');
+        var box = document.createElement('div'); box.className = 'legcell';
+        var ci = document.createElement('input');
+        ci.type = 'number'; ci.className = 'cell' + (it.ovr[leg.id] != null ? ' ovr' : '');
+        ci.step = '0.01'; ci.value = lc[leg.id].toFixed(2);
+        ci.disabled = isLocked('cost', leg.id);
+        ci.setAttribute('aria-label', it.name + ' leg ' + leg.id + ' cost');
+        ci.addEventListener('change', function(){
+          it.ovr[leg.id] = Math.round((parseFloat(ci.value)||0)*100)/100; render();
+        });
+        box.appendChild(ci);
+        if(it.ovr[leg.id] != null){
+          var was = document.createElement('div'); was.className = 'was';
+          was.appendChild(document.createTextNode('was ' + plain(ld[leg.id])));
+          var rb = document.createElement('button');
+          rb.type = 'button'; rb.title = 'Reset to derived'; rb.setAttribute('aria-label','Reset to derived value');
+          rb.appendChild(ic('undo'));
+          rb.disabled = isLocked('cost', leg.id);
+          rb.addEventListener('click', function(){ delete it.ovr[leg.id]; render(); });
+          was.appendChild(rb);
+          box.appendChild(was);
+        } else if(S.showLegRev){
+          var sub = document.createElement('div'); sub.className = 'sub';
+          sub.textContent = 'rev ' + plain(lr[leg.id]);
+          box.appendChild(sub);
+        }
+        if(it.ovr[leg.id] != null && S.showLegRev){
+          var sub2 = document.createElement('div'); sub2.className = 'sub';
+          sub2.textContent = 'rev ' + plain(lr[leg.id]);
+          box.appendChild(sub2);
+        }
+        td.appendChild(box); tr.appendChild(td);
+      });
+
+      var tdT = document.createElement('td'); tdT.className = 'num'; tdT.textContent = money(tc); tr.appendChild(tdT);
+      var tdP = document.createElement('td'); tdP.className = 'num';
+      tdP.textContent = money(profit);
+      tdP.style.color = profit < 0 ? 'var(--red)' : 'var(--green)';
+      tdP.style.fontWeight = '700';
+      tr.appendChild(tdP);
+      var tdM = document.createElement('td'); tdM.appendChild(pctEl(profit, it.revenue, true)); tr.appendChild(tdM);
+
+      var tdA = document.createElement('td');
+      var del = document.createElement('button');
+      del.type = 'button'; del.className = 'iconbtn'; del.title = 'Remove from parent and every leg';
+      del.setAttribute('aria-label', 'Remove ' + it.name);
+      del.appendChild(ic('trash'));
+      del.disabled = isLocked('revenue');
+      del.addEventListener('click', function(){
+        S.items.splice(idx,1); S.openShare = null; render();
+      });
+      tdA.appendChild(del); tr.appendChild(tdA);
+
+      body.appendChild(tr);
+
+      /* expanded per-item share editor */
+      if(S.openShare === idx){
+        var sr = document.createElement('tr'); sr.className = 'sub';
+        var sd = document.createElement('td'); sd.colSpan = span; sd.className = 'l';
+        var ed = document.createElement('div'); ed.className = 'subedit';
+        var lbl = document.createElement('span'); lbl.className = 'lbl';
+        lbl.textContent = 'Share of "' + it.name + '" per leg';
+        ed.appendChild(lbl);
+        S.legs.forEach(function(leg){
+          var pair = document.createElement('div'); pair.className = 'pair';
+          var pl = document.createElement('label');
+          pl.style.fontSize = '11.5px'; pl.style.fontWeight = '700';
+          pl.textContent = 'Leg ' + leg.id;
+          pl.setAttribute('for', 'ishare-' + idx + '-' + leg.id);
+          var pi = document.createElement('input');
+          pi.type = 'number'; pi.className = 'cell mini'; pi.id = 'ishare-' + idx + '-' + leg.id;
+          pi.min = 0; pi.max = 100; pi.step = 1; pi.value = sh[leg.id];
+          pi.disabled = isLocked('share');
+          pi.addEventListener('change', function(){
+            if(!it.shares) it.shares = sharesOf(it);
+            it.shares[leg.id] = Math.max(0, Math.min(100, Math.round(parseFloat(pi.value)||0)));
+            render();
+          });
+          pair.appendChild(pl); pair.appendChild(pi);
+          ed.appendChild(pair);
+        });
+        var tot = S.legs.reduce(function(a,l){ return a + sh[l.id]; }, 0);
+        var tt = document.createElement('span');
+        tt.className = 'lbl'; tt.style.color = tot === 100 ? 'var(--text-muted)' : 'var(--red)';
+        tt.textContent = 'Total ' + tot + '%';
+        ed.appendChild(tt);
+        if(it.shares){
+          var rl = document.createElement('button');
+          rl.type = 'button'; rl.className = 'linkbtn'; rl.textContent = 'Reset to overall split';
+          rl.addEventListener('click', function(){ it.shares = null; render(); });
+          ed.appendChild(rl);
+        }
+        sd.appendChild(ed); sr.appendChild(sd); body.appendChild(sr);
+      }
+    });
+
+    if(!S.items.length){
+      var er = document.createElement('tr');
+      var ec = document.createElement('td'); ec.colSpan = span; ec.className = 'l';
+      ec.style.color = 'var(--text-muted)'; ec.style.padding = '22px';
+      ec.textContent = 'No price items. Add one to charge the customer and create a cost on every leg.';
+      er.appendChild(ec); body.appendChild(er);
+    }
+
+    document.getElementById('gridHint').textContent = S.mode === 'split'
+      ? 'Adjust the overall share, or give a single charge its own share if only one leg incurred it. Editing a leg cost here sets what that driver is paid — it never changes what the client is invoiced.'
+      : 'Revenue is what the customer is charged. Each leg column is what that driver is paid — edit it directly, or set it to 0.00 to not pay that driver for the item.';
+  }
+
+  function totals(){
+    var rev = 0, cost = 0;
+    S.items.forEach(function(it){ rev += it.revenue; cost += itemCost(it); });
+    return {rev:rev, cost:cost, gp:rev-cost};
+  }
+
+  function renderTotals(){
+    var t = totals();
+    document.getElementById('sRev').textContent = money(t.rev);
+    document.getElementById('sCost').textContent = money(t.cost);
+    document.getElementById('sGp').textContent = money(t.gp);
+    var m = pct(t.gp, t.rev);
+    document.getElementById('sMargin').textContent = (m === null ? '—' : m + '%') + ' MARGIN';
+
+    var foot = document.getElementById('footRow');
+    foot.textContent = '';
+    var c1 = document.createElement('td'); c1.className = 'l f1'; c1.textContent = 'Total';
+    foot.appendChild(c1);
+    var c2 = document.createElement('td'); c2.className = 'f2 num'; c2.textContent = money(t.rev);
+    foot.appendChild(c2);
+    var c3 = document.createElement('td'); c3.textContent = ''; foot.appendChild(c3);
+    S.legs.forEach(function(leg){
+      var v = 0; S.items.forEach(function(it){ v += legCost(it)[leg.id]; });
+      var td = document.createElement('td'); td.className = 'num'; td.textContent = money(v);
+      foot.appendChild(td);
+    });
+    var c4 = document.createElement('td'); c4.className = 'num'; c4.textContent = money(t.cost); foot.appendChild(c4);
+    var c5 = document.createElement('td'); c5.className = 'num'; c5.textContent = money(t.gp);
+    c5.style.color = t.gp < 0 ? 'var(--red)' : 'var(--green)';
+    foot.appendChild(c5);
+    var c6 = document.createElement('td'); c6.appendChild(pctEl(t.gp, t.rev)); foot.appendChild(c6);
+    foot.appendChild(document.createElement('td'));
+
+    document.getElementById('itemCount').textContent =
+      S.items.length + (S.items.length === 1 ? ' item' : ' items');
+
+    var legSum = 0;
+    S.legs.forEach(function(leg){ S.items.forEach(function(it){ legSum += legRev(it)[leg.id]; }); });
+    var ok = Math.abs(legSum - t.rev) < 0.005;
+    var tally = document.getElementById('tally');
+    tally.textContent = '';
+    tally.appendChild(document.createTextNode(S.items.length + ' items · '));
+    var b = document.createElement('b'); b.textContent = money(t.rev);
+    tally.appendChild(b);
+    tally.appendChild(document.createTextNode(' total · legs re-sum to '));
+    var b2 = document.createElement('b');
+    b2.textContent = money(legSum);
+    if(!ok) b2.className = 'warn';
+    tally.appendChild(b2);
+    tally.appendChild(document.createTextNode(ok ? ' ✓' : ' ✕'));
+  }
+
+  /* ---------- harness wiring ---------- */
+  document.getElementById('segLegs').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b) return;
+    var n = parseInt(b.dataset.n, 10);
+    var keep = {};
+    S.legs.forEach(function(l){ keep[l.id] = true; });
+    S.legs = LEGSETS[n].map(function(l){ return {id:l.id, miles:l.miles, share:l.share}; });
+    S.items.forEach(function(it){ it.shares = null; it.ovr = {}; });
+    S.openShare = null;
+    press('segLegs','n',n); render();
+  });
+  document.getElementById('segMode').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b) return;
+    S.mode = b.dataset.m; press('segMode','m',S.mode); render();
+  });
+  document.getElementById('cbInvoiced').addEventListener('change', function(e){
+    S.invoiced = e.target.checked; render();
+  });
+  document.getElementById('cbSettled').addEventListener('change', function(e){
+    S.settledA = e.target.checked; render();
+  });
+  document.getElementById('cbRev').addEventListener('change', function(e){
+    S.showLegRev = e.target.checked; render();
+  });
+  document.getElementById('btnReset').addEventListener('click', function(){ reset(); render(); });
+  document.getElementById('btnAdd').addEventListener('click', function(){
+    S.items.push(mkItem('New charge', 0, 0));
+    S.openShare = null; render();
+    var rows = document.getElementById('rows').querySelectorAll('tr:not(.sub)');
+    var last = rows[rows.length-1];
+    if(last) last.querySelector('input.name').focus();
+  });
+
+  reset();
+  render();
+})();
+</script>
+</body>
+</html>
