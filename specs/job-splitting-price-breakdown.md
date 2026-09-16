@@ -27,7 +27,8 @@ The proposed fix is one idea applied consistently: **the parent job is the singl
 editable source of truth, and the child jobs are fully derived from it.** The UI that
 expresses this is a three-column parent breakdown — Revenue, Part A cost, Part B cost —
 which makes the out-of-sync state structurally impossible rather than something we
-validate for at archive time.
+validate for at archive time. The same modal serves at the moment of splitting, so the
+operator can get it right up front rather than splitting and then fixing (§7).
 
 ---
 
@@ -121,7 +122,22 @@ Both children currently expose the full editing surface — per-item edit, delet
 Restore the parent to **its original 5 rows** and break the *cost* column out per leg.
 Revenue stays a single column, because there is only ever one customer being charged.
 
-### Leg summary strip (above the grid)
+### Where this UI applies
+
+| Job | Price Breakdown shown |
+|---|---|
+| Not split | The current modal, unchanged. |
+| **Split parent** | **The new modal described below.** |
+| Split child (Part A / Part B) | The current modal, but **read-only** — see §5. |
+
+### The header stays
+
+The three summary cards — **Total Revenue**, **Total Cost**, **Gross Profit** with the
+margin badge — remain exactly as they are today (114.00 / 69.00 / 45.00 / 39.5% for the
+worked example). The job's overall profitability must stay legible at the top of the
+modal; the per-leg breakdown is added below it, not in place of it.
+
+### Leg summary strip
 
 Answers "which driver is doing which bit", which nothing on the current screen does.
 
@@ -147,16 +163,39 @@ The two leg-cost column totals (55.20 / 13.80) are exactly the two child jobs' T
 Cost. The Revenue total is exactly the headline price. Reconciliation is visible on
 the face of the screen rather than being a rule enforced somewhere else.
 
-`Total cost`, `Profit` and `Margin` are derived columns. They're kept because the
-current modal shows Profit and Margin on every row and dropping them would be a
-regression; hide them behind a toggle if the grid gets tight.
+`Total cost`, `Profit` and `Margin` are derived columns.
+
+### Leg cell contents
+
+Each leg cell shows that leg's **cost** as the primary, editable figure, with that
+leg's derived **revenue** as a subline:
+
+```
+Part A cost
+  25.60
+  rev 51.20
+```
+
+This mirrors how the Confirm Split Pricing screen already stacks the two figures
+(`US$51.20` / `cost US$25.60`), just inverted to put cost first. It matters because
+the three-column layout otherwise drops per-item leg revenue entirely, which is the
+one thing the current split screen shows that the new grid would lose — and §7 makes
+these the same component, so it has to work at split time too. Make the subline
+toggleable if it reads as noise.
+
+### Column widths at 3+ legs
+
+Grow the modal width first — the current modal is narrow relative to the viewport and
+has room to expand. Only once the modal is at its maximum width do the leg columns
+scroll horizontally. When they do, **freeze the Item and Revenue columns** so the
+operator keeps their anchor while scrolling through legs.
 
 ### What is editable
 
 | Cell | Editable | Effect |
 |---|---|---|
 | **Revenue** | Yes | Re-derives each leg's revenue for that item by its share. Changes what the customer is invoiced. |
-| **Part A / Part B cost** | Yes | Sets that leg's cost for that item directly (an override of the rate-derived value). Does **not** touch revenue. |
+| **Part A / Part B cost** | Yes | Sets that leg's cost for that item directly. Does **not** touch revenue. Zero is valid. |
 | **Share %** per item | Yes, secondary | Re-allocates revenue and non-overridden cost across the legs. |
 | Total cost / Profit / Margin | No | Derived. |
 | Child job headline price | No | Derived — see §5. |
@@ -172,10 +211,10 @@ with a **reset** affordance, so it's obvious a human changed it.
 1. **The parent is the only editable surface.** Child job prices are derived and
    read-only. This is what makes the archive bug unreachable rather than validated-for.
 2. **The headline price is not separately editable on a split parent.** It *is* the
-   sum of the Revenue column. Editing revenue happens per item, in the breakdown.
-3. **Editing parent revenue re-derives child revenue by share** — the behaviour asked
-   for directly. Leg revenue for an item is always `item revenue × leg share`, and
-   shares sum to 100%, so the legs always re-sum to the parent.
+   sum of the Revenue column.
+3. **Editing parent revenue re-derives child revenue by share.** Leg revenue for an
+   item is always `item revenue × leg share`, and shares sum to 100%, so the legs
+   always re-sum to the parent.
 4. **Cost overrides are sticky.** Once a leg's cost for an item is overridden it
    survives later share changes until explicitly reset.
 5. **Editing cost never changes revenue**, and vice versa.
@@ -200,40 +239,104 @@ Both need doing, or the parent and children can still diverge from the other sid
 
 ---
 
-## 6. Edge cases to decide
+## 6. Decisions
 
-These are real gaps in the proposal, not hypotheticals:
+### 6.1 Adding and removing price items after the split — allowed
 
-1. **Adding a price item after the split.** The parent's **Add Item** button still
-   exists. A new item has no share yet — does it default to the overall leg share, go
-   100% to one leg, or force the operator to choose? *Recommend: default to the overall
-   share, editable inline.*
-2. **Deleting a price item after the split** must remove it from every child.
-3. **More than two legs.** Three columns becomes N+1. Decide the behaviour at 4+ legs —
-   horizontal scroll, or collapse to a per-leg grouped view.
-4. **Jobs already out of sync.** There will be existing split jobs in this state that
-   still won't archive. They need a remediation path — recommend a "re-derive children
-   from parent" action rather than a silent migration, so the operator sees what moved.
-5. **Reassigning a leg to a different driver** after the split — does cost re-derive
-   against the new driver's pay setup, or stay as allocated?
-6. **Locking after POD / invoice.** Can prices still be edited once a leg is delivered
-   or the parent invoiced, and what freezes at that point?
+Both are allowed on the parent, and both cascade to every leg:
+
+- **Adding** an item creates a corresponding cost item on **every** leg job. Each leg's
+  cost cell is then editable, so the operator can pay some drivers for it, pay them
+  different amounts, or set a leg to **zero** to not pay that driver at all.
+- **Removing** an item removes it from every leg, which removes that element of the
+  drivers' pay.
+
+The item's **revenue** still needs a share in order to divide across the legs.
+Recommend defaulting a new item to the overall leg share, editable inline — the cost
+cells are independent of it and can be zeroed regardless.
+
+Adding or removing is subject to the locks in §6.5: an item can't be added or removed
+in a way that changes revenue after invoicing, or changes a settled leg's cost.
+
+### 6.2 More than two legs — widen, then scroll
+
+Grow the modal before introducing horizontal scroll; freeze the Item and Revenue
+columns once scrolling starts. See §3.
+
+### 6.3 Existing out-of-sync jobs — no migration needed
+
+Jobs that had drifted have already been corrected manually, so there is **no history
+to remediate**. No migration, no repair tool. The structural fix only needs to prevent
+it recurring.
+
+### 6.4 Reassigning a leg to a different driver — cost is unchanged
+
+Cost stays as allocated. It does **not** re-derive against the new driver's pay setup.
+
+### 6.5 When editing locks
+
+Delivery does **not** lock anything — prices remain editable after POD. The two locks
+have different triggers, and the cost lock is **per leg**, because each leg has its own
+driver and its own settlement:
+
+| What | Editable until | After that |
+|---|---|---|
+| **Revenue** (whole column) | the parent job is **invoiced to the customer** | read-only |
+| **Part X cost** (one leg's column) | **that leg's driver settlement** has been run | read-only *for that leg only*; other legs stay editable |
+| **Share %** | invoiced, or any affected leg settled — whichever comes first | read-only |
+
+So Leg A can be settled and frozen while Leg B is still fully editable. The UI must
+show the lock per column, with the reason ("settled 12 Sep" / "invoiced"), not disable
+the whole grid.
+
+Share % locks on the stricter of the two triggers because it moves revenue *and* cost;
+this is the conservative choice and worth confirming.
+
+Editing a leg's cost **after** settlement is handled by the existing retrospective
+function in Accounts, which raises a deduction or an extra payment. That is explicitly
+**out of scope** for this UI — the Job Search modal just needs to stop offering the
+edit and say where it's done.
 
 ---
 
-## 7. Suggested build order
+## 7. One modal, two modes
+
+The Confirm Split Pricing screen and the new parent edit modal should be **the same
+component**, so the operator can do this editing at the time of splitting rather than
+splitting first and fixing it afterwards.
+
+| | Split mode (pre-split) | Edit mode (post-split) |
+|---|---|---|
+| Legs identified by | Leg A / Leg B + mileage | child job number + driver name |
+| Overall share control | Yes — seeded from road distance | Yes |
+| Per-item share | Yes | Yes |
+| Per-leg cost cells | Yes, editable | Yes, editable |
+| Header summary cards | Yes | Yes |
+| Locks (§6.5) | N/A | Applied per column |
+| Primary action | **Confirm & Split** | **Save & Close** |
+
+The banner already on the split screen — *"The job total stays US$114.00 — splitting
+does not change what the client is invoiced"* — is worth keeping in both modes.
+
+---
+
+## 8. Suggested build order
 
 **Phase 1 — stop the bleeding.** Lock the parent headline price field and make the
-child breakdowns read-only (§5), and add the "re-derive children from parent" repair
-action (§6.4). This alone kills the archive bug without any new UI.
+child breakdowns read-only (§5). This alone kills the archive bug with no new UI, and
+needs no migration (§6.3).
 
-**Phase 2 — the new grid.** Restore the parent's original rows and add the per-leg
-cost columns and leg summary strip (§3).
+**Phase 2 — the new grid.** Restore the parent's original rows, add the per-leg cost
+columns, leg summary strip and per-column locks (§3, §6.5), shown for split jobs only.
+
+**Phase 3 — unify.** Re-point Confirm Split Pricing at the same component (§7).
 
 ---
 
-## 8. Acceptance criteria
+## 9. Acceptance criteria
 
+- [ ] The new modal is shown **only** for split parent jobs; unsplit jobs are unchanged.
+- [ ] The Total Revenue / Total Cost / Gross Profit header cards are retained.
 - [ ] After a split, the parent Price Breakdown shows the job's **original** items
       (5 for this example), not the Part A / Part B expansion.
 - [ ] The grid has one cost column per leg, with a total row per column.
@@ -244,24 +347,32 @@ cost columns and leg summary strip (§3).
 - [ ] A leg summary strip names the driver on each leg, or **Unassigned**.
 - [ ] The parent headline price field is read-only on a split parent.
 - [ ] Child job Price Breakdowns are read-only — no edit, delete, or Add Item.
-- [ ] Editing an item's Revenue on the parent updates both children's revenue by share,
-      and the parent total, in one action.
-- [ ] Editing a leg's cost cell changes no revenue figure anywhere.
+- [ ] Editing an item's Revenue updates both children's revenue by share, and the
+      parent total, in one action.
+- [ ] Editing a leg's cost cell changes no revenue figure anywhere, and accepts zero.
+- [ ] Adding an item on the parent creates a cost item on every leg; removing it
+      removes it from every leg.
 - [ ] Changing a share leaves overridden costs untouched and re-derives the rest.
+- [ ] Reassigning a leg's driver leaves that leg's cost unchanged.
+- [ ] Revenue is read-only once the parent is invoiced.
+- [ ] A settled leg's cost column is read-only while unsettled legs stay editable.
+- [ ] Prices remain editable after POD.
+- [ ] At 3+ legs the modal widens before scrolling; Item and Revenue stay frozen.
 - [ ] A split job can be archived after any sequence of the above edits.
-- [ ] Existing out-of-sync split jobs can be repaired and then archived.
 
 ---
 
-## 9. Out of scope
+## 10. Out of scope
 
 - The negative fuel line (staging rating quirk).
 - Changing how the initial mileage-based allocation is calculated.
+- Retrospective cost edits after settlement — handled by the existing Accounts
+  function that raises a deduction or extra payment (§6.5).
 - Invoicing and driver-payment-run behaviour downstream of the split.
 
 ---
 
-## 10. Screenshots
+## 11. Screenshots
 
 Source of record — Google Drive (Urgent Couriers account):
 <https://drive.google.com/drive/folders/1uCU_e608q818EzbDLIqrzHDAcRDgkRBp>
