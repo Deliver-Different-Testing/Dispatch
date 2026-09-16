@@ -28,7 +28,12 @@ editable source of truth, and the child jobs are fully derived from it.** The UI
 expresses this is a three-column parent breakdown — Revenue, Part A cost, Part B cost —
 which makes the out-of-sync state structurally impossible rather than something we
 validate for at archive time. The same modal serves at the moment of splitting, so the
-operator can get it right up front rather than splitting and then fixing (§7).
+operator can get it right up front rather than splitting and then fixing (§8).
+
+Structurally that rests on one change: **splitting stops deleting the parent's price items.**
+Today it destroys them and writes per-leg rows whose only link back is their name. Keeping the
+parent's rows and giving each leg row a foreign key to its parent item is what makes the grid
+groupable, and it removes the name-parsing the current design would otherwise need (§5).
 
 ---
 
@@ -128,7 +133,7 @@ Revenue stays a single column, because there is only ever one customer being cha
 |---|---|
 | Not split | The current modal, unchanged. |
 | **Split parent** | **The new modal described below.** |
-| Split child (Part A / Part B) | The current modal, but **read-only** — see §5. |
+| Split child (Part A / Part B) | The current modal, but **read-only** — see §6. |
 
 ### The header stays
 
@@ -179,7 +184,7 @@ Part A cost
 This mirrors how the Confirm Split Pricing screen already stacks the two figures
 (`US$51.20` / `cost US$25.60`), just inverted to put cost first. It matters because
 the three-column layout otherwise drops per-item leg revenue entirely, which is the
-one thing the current split screen shows that the new grid would lose — and §7 makes
+one thing the current split screen shows that the new grid would lose — and §8 makes
 these the same component, so it has to work at split time too. Make the subline
 toggleable if it reads as noise.
 
@@ -198,8 +203,8 @@ operator keeps their anchor while scrolling through legs.
 | **Part A / Part B cost** | Yes | Sets that leg's cost for that item directly. Does **not** touch revenue. Zero is valid. |
 | **Share %** per item | Yes, secondary | Re-allocates revenue and non-overridden cost across the legs. |
 | Total cost / Profit / Margin | No | Derived. |
-| Child job headline price | No | Derived — see §5. |
-| Parent headline price | No | Derived — it is the Revenue column total. See §5. |
+| Child job headline price | No | Derived — see §6. |
+| Parent headline price | No | Derived — it is the Revenue column total. See §6. |
 
 An overridden leg cost is flagged visually and shows the derived value it replaced,
 with a **reset** affordance, so it's obvious a human changed it.
@@ -227,7 +232,70 @@ with a **reset** affordance, so it's obvious a human changed it.
 
 ---
 
-## 5. Locking the two editable surfaces that cause the drift
+## 5. Data model — how each leg row keys back to its parent item
+
+> Jacob's question: today the split deletes the parent's price-item rows and writes new
+> per-leg rows named `Base Part A` / `Base Part B`, so the only link back to "this is the
+> same conceptual item" is the name minus the ` Part X` suffix. How should the new grid
+> key the grouping?
+
+**It shouldn't have to.** Name matching is only necessary because the split destroys the
+rows it derived from. Once the parent keeps its own items — the whole point of §3 — there
+is a durable row to point at, and the grouping is a foreign key, not a string parse.
+
+### The change
+
+1. **Splitting stops deleting the parent's price items.** It becomes additive. The parent's
+   rows stay exactly as they were and remain what the customer is charged on.
+2. **Each child job gets one derived row per parent item**, carrying a key back to it:
+
+| Column on the child price item | Meaning |
+|---|---|
+| `parent_price_item_id` | FK to the parent job's price item row. **This is the grouping key.** |
+| `job_id` | the child (leg) job — which column the row lands in |
+| `share_pct` | that leg's share of this item, so per-item shares (§3) work |
+| `cost_override` | set when an operator edits that leg's cost directly (§4.4); null means derived |
+
+3. **Exactly one child row per `(parent_price_item_id, job_id)`**, enforced by a unique
+   constraint. Every item exists on every leg — at zero cost where that driver isn't paid
+   for it (§7.1) — so the grid is a clean pivot and the column totals reconcile by
+   construction rather than by convention.
+4. **Deleting a parent item cascades** to its child rows (§7.1).
+5. **The ` Part A` / ` Part B` suffix becomes unnecessary.** The child job number already
+   identifies the leg, so child jobs can show the item's real name. Check first for anything
+   downstream that parses those names today.
+
+### Where the values are written
+
+Downstream consumers — Accounts, settlement, invoicing — read the child job's rows, so the
+derived figures need to exist as real rows rather than being computed on read. Keep them
+stored, but make the parent the **only write path**: one transactional operation recalculates
+and rewrites every affected child row whenever a parent item, a share, or a leg cost changes.
+That keeps the single-source-of-truth property of §4 while leaving downstream reads working
+exactly as they do now.
+
+⚠️ **Unconfirmed, but it bears on this decision.** George has seen a courier payment edited in
+the Dispatch Web price breakdown not appear in the Accounts courier payment section. It may be
+unrelated. But if Accounts reads a snapshot taken at archive or settlement rather than the live
+child rows, the rewrite path above has to reach that snapshot too — otherwise the editability
+promised in §7.5 silently does nothing. Worth confirming before Phase 2 starts.
+
+### Existing split jobs
+
+Their child rows have no `parent_price_item_id`. Two options:
+
+- **Backfill once by name** — the same ` Part X` heuristic, run as a reviewed one-off migration
+  that reports every row it cannot match. Acceptable as a migration in a way it is not as
+  runtime behaviour.
+- **Leave them on the legacy flat view**, and apply the new grid only to jobs split after the
+  change.
+
+Recommend the backfill with an unmatched-rows report. Note this is a different question from
+§7.3: that says no amounts need correcting, not that the new key already exists.
+
+---
+
+## 6. Locking the two editable surfaces that cause the drift
 
 Both need doing, or the parent and children can still diverge from the other side:
 
@@ -239,9 +307,9 @@ Both need doing, or the parent and children can still diverge from the other sid
 
 ---
 
-## 6. Decisions
+## 7. Decisions
 
-### 6.1 Adding and removing price items after the split — allowed
+### 7.1 Adding and removing price items after the split — allowed
 
 Both are allowed on the parent, and both cascade to every leg:
 
@@ -255,25 +323,25 @@ The item's **revenue** still needs a share in order to divide across the legs.
 Recommend defaulting a new item to the overall leg share, editable inline — the cost
 cells are independent of it and can be zeroed regardless.
 
-Adding or removing is subject to the locks in §6.5: an item can't be added or removed
+Adding or removing is subject to the locks in §7.5: an item can't be added or removed
 in a way that changes revenue after invoicing, or changes a settled leg's cost.
 
-### 6.2 More than two legs — widen, then scroll
+### 7.2 More than two legs — widen, then scroll
 
 Grow the modal before introducing horizontal scroll; freeze the Item and Revenue
 columns once scrolling starts. See §3.
 
-### 6.3 Existing out-of-sync jobs — no migration needed
+### 7.3 Existing out-of-sync jobs — no migration needed
 
 Jobs that had drifted have already been corrected manually, so there is **no history
 to remediate**. No migration, no repair tool. The structural fix only needs to prevent
 it recurring.
 
-### 6.4 Reassigning a leg to a different driver — cost is unchanged
+### 7.4 Reassigning a leg to a different driver — cost is unchanged
 
 Cost stays as allocated. It does **not** re-derive against the new driver's pay setup.
 
-### 6.5 When editing locks
+### 7.5 When editing locks
 
 Delivery does **not** lock anything — prices remain editable after POD. The two locks
 have different triggers, and the cost lock is **per leg**, because each leg has its own
@@ -299,7 +367,7 @@ edit and say where it's done.
 
 ---
 
-## 7. One modal, two modes
+## 8. One modal, two modes
 
 The Confirm Split Pricing screen and the new parent edit modal should be **the same
 component**, so the operator can do this editing at the time of splitting rather than
@@ -312,7 +380,7 @@ splitting first and fixing it afterwards.
 | Per-item share | Yes | Yes |
 | Per-leg cost cells | Yes, editable | Yes, editable |
 | Header summary cards | Yes | Yes |
-| Locks (§6.5) | N/A | Applied per column |
+| Locks (§7.5) | N/A | Applied per column |
 | Primary action | **Confirm & Split** | **Save & Close** |
 
 The banner already on the split screen — *"The job total stays US$114.00 — splitting
@@ -320,21 +388,29 @@ does not change what the client is invoiced"* — is worth keeping in both modes
 
 ---
 
-## 8. Suggested build order
+## 9. Suggested build order
 
 **Phase 1 — stop the bleeding.** Lock the parent headline price field and make the
-child breakdowns read-only (§5). This alone kills the archive bug with no new UI, and
-needs no migration (§6.3).
+child breakdowns read-only (§6). This alone kills the archive bug with no new UI, and
+needs no migration (§7.3).
 
-**Phase 2 — the new grid.** Restore the parent's original rows, add the per-leg cost
-columns, leg summary strip and per-column locks (§3, §6.5), shown for split jobs only.
+**Phase 2 — stop deleting, then build the grid.** The schema change in §5 comes first:
+splitting stops destroying the parent's price items, and each child row carries a foreign key
+back to its parent item. Everything else depends on it. Then the grid itself — the parent's
+original rows, the per-leg cost columns, leg summary strip and per-column locks (§3, §7.5),
+shown for split jobs only.
 
-**Phase 3 — unify.** Re-point Confirm Split Pricing at the same component (§7).
+**Phase 3 — unify.** Re-point Confirm Split Pricing at the same component (§8).
 
 ---
 
-## 9. Acceptance criteria
+## 10. Acceptance criteria
 
+- [ ] Splitting no longer deletes the parent's price items.
+- [ ] Each child price item carries a foreign key to the parent item it derives from; no
+      code path groups rows by parsing names.
+- [ ] Exactly one child row exists per (parent item, leg), enforced by a unique constraint.
+- [ ] A parent-side change rewrites every affected child row in one transaction.
 - [ ] The new modal is shown **only** for split parent jobs; unsplit jobs are unchanged.
 - [ ] The Total Revenue / Total Cost / Gross Profit header cards are retained.
 - [ ] After a split, the parent Price Breakdown shows the job's **original** items
@@ -362,17 +438,17 @@ columns, leg summary strip and per-column locks (§3, §6.5), shown for split jo
 
 ---
 
-## 10. Out of scope
+## 11. Out of scope
 
 - The negative fuel line (staging rating quirk).
 - Changing how the initial mileage-based allocation is calculated.
 - Retrospective cost edits after settlement — handled by the existing Accounts
-  function that raises a deduction or extra payment (§6.5).
+  function that raises a deduction or extra payment (§7.5).
 - Invoicing and driver-payment-run behaviour downstream of the split.
 
 ---
 
-## 11. Screenshots
+## 12. Screenshots
 
 Source of record — Google Drive (Urgent Couriers account):
 <https://drive.google.com/drive/folders/1uCU_e608q818EzbDLIqrzHDAcRDgkRBp>
