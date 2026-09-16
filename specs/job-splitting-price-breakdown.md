@@ -263,11 +263,16 @@ cost columns and leg summary strip (§3).
 
 ## 10. Screenshots
 
-To be added to `mockups/job-splitting/`. Every figure from them is reproduced as a
-table above, so the spec stands on its own without them.
+Source of record — Google Drive (Urgent Couriers account):
+<https://drive.google.com/drive/folders/1uCU_e608q818EzbDLIqrzHDAcRDgkRBp>
 
-- `01-pre-split-price-breakdown.png` — KT4070V before splitting
-- `02-split-screen.png` — Confirm Split Pricing, 80/20
-- `03-parent-price-breakdown.png` — KT4071V after splitting, 10 items
-- `04-child-part-a.png` — KT4071VA
-- `05-child-part-b.png` — KT4071VB
+| File in Drive | Shows | Spec section |
+|---|---|---|
+| `PreSplit Price Breakdown.png` | KT4070V before splitting, 5 items, US$114.00 | §2 Stage 1 |
+| `Split screen1.png` | Confirm Split Pricing, 80/20 by road distance | §2 Stage 2 |
+| `ParentPrice BreakDown.png` | KT4071V after splitting, 10 items — the problem screen | §2 Stage 3 |
+| `PriceBreakdown PartA.png` | KT4071VA, Leg A child, US$91.20 / US$55.20 | §2 Stage 3b |
+| `Price Breakdown PartB.png` | KT4071VB, Leg B child, US$22.80 / US$13.80 | §2 Stage 3b |
+
+Every figure from all five screens is transcribed into the tables above, so this
+spec is complete without them. The images are corroboration, not a dependency.
