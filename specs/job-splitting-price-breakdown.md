@@ -280,18 +280,15 @@ unrelated. But if Accounts reads a snapshot taken at archive or settlement rathe
 child rows, the rewrite path above has to reach that snapshot too — otherwise the editability
 promised in §7.5 silently does nothing. Worth confirming before Phase 2 starts.
 
-### Existing split jobs
+### Existing split jobs — not in scope
 
-Their child rows have no `parent_price_item_id`. Two options:
+No backfill, no migration. The fix applies **going forward only**.
 
-- **Backfill once by name** — the same ` Part X` heuristic, run as a reviewed one-off migration
-  that reports every row it cannot match. Acceptable as a migration in a way it is not as
-  runtime behaviour.
-- **Leave them on the legacy flat view**, and apply the new grid only to jobs split after the
-  change.
-
-Recommend the backfill with an unmatched-rows report. Note this is a different question from
-§7.3: that says no amounts need correcting, not that the new key already exists.
+This needs no extra work, because a job split before the change has had its original parent
+price items deleted already — they aren't recoverable, so the new grid could not render one
+whatever key it used. Those jobs keep today's flat breakdown until they age out, which means
+the existing display path stays until then. Everything in this spec applies to jobs split
+after the change.
 
 ---
 
@@ -407,6 +404,8 @@ shown for split jobs only.
 ## 10. Acceptance criteria
 
 - [ ] Splitting no longer deletes the parent's price items.
+- [ ] The new grid applies to jobs split after the change; jobs split before it continue to
+      render as they do today, with no migration.
 - [ ] Each child price item carries a foreign key to the parent item it derives from; no
       code path groups rows by parsing names.
 - [ ] Exactly one child row exists per (parent item, leg), enforced by a unique constraint.
