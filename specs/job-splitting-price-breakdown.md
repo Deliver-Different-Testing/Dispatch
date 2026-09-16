@@ -2,6 +2,7 @@
 
 **Author:** George
 **For:** Jacob
+**Workstream:** pricing
 **Date:** 2026-09-16
 **Clickable prototype:** `mockups/split-pricing-demo.html` in this repo — open it in a
 browser. Seeded with the same staging figures used throughout; the controls along the top
