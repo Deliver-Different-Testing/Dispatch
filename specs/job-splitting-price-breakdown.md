@@ -3,8 +3,50 @@
 **Author:** George
 **For:** Jacob
 **Date:** 2026-09-16
+**Clickable prototype:** `mockups/split-pricing-demo.html` in this repo — open it in a
+browser. Seeded with the same staging figures used throughout; the controls along the top
+toggle leg count, split vs edit mode, and the two locks.
 **Related work:** Jacob's fix this week that locks the split amount so it no longer
 changes after a job has been split on the parent (customer charging) job.
+
+---
+
+## What changed since you last read this
+
+This document replaces any earlier copy — please don't work from one alongside a list of
+changes, because the section numbering has moved.
+
+**1. Splitting must stop deleting the parent's price items (§5, new).** The biggest change,
+and it answers the grouping question: with the parent's rows kept there is a durable row to
+point at, so each child row carries `parent_price_item_id` and no code path ever groups rows
+by parsing names. Everything else now depends on this.
+
+**2. Section numbers shifted.** Inserting §5 pushed the old §5–11 down to §6–12. §1–§4 are
+unchanged. Any note citing the old numbers is off by one from §5 onward.
+
+**3. Phase 2 now leads with the schema change (§9)**, not the grid — the grid can't be built
+first.
+
+**4. Existing split jobs are out of scope (§5).** An earlier draft recommended backfilling the
+new key by name. That's dropped: fix forward only. Jobs split before the change keep today's
+flat breakdown, which does mean the existing display path stays until they age out.
+
+**5. The six open edge cases are now decisions (§7)** — add/remove cascades to every leg with
+zero cost allowed; widen-then-scroll at 3+ legs; leg reassignment leaves cost unchanged; and
+the locking rules: delivery locks nothing, revenue locks on customer invoice, each leg's cost
+locks independently when that leg's settlement runs.
+
+**6. Three requirements added** — the new UI is for split jobs only, the Total Revenue / Total
+Cost / Gross Profit header cards stay, and Confirm Split Pricing becomes the same component in
+a pre-split mode (§8).
+
+**7. Four acceptance criteria added** for the data model; 24 in total (§10).
+
+⚠️ **One thing is unconfirmed, and it gates §7.5.** A courier payment edited in the Dispatch Web
+price breakdown has been seen not to reach the Accounts courier payment section. If Accounts
+reads a snapshot taken at archive or settlement rather than the live child rows, the write path
+in §5 has to reach that snapshot too — otherwise "cost is editable until settlement" silently
+does nothing. Worth settling before Phase 2 starts.
 
 ---
 
