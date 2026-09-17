@@ -1,7 +1,7 @@
 # Network Partner Pay Visibility
 
 **Date:** 17 September 2026
-**For:** Karen (implementation, Dispatch) · Kerran (database + job search / download, §7.2) · Jacob
+**For:** Kerran (implementation, Dispatch) · Jacob
 **From:** Steve Bonnici (AI-assisted analysis)
 **Status:** Investigation — not scoped for build, not assigned.
 
@@ -9,7 +9,7 @@
 >
 > **This is two pieces of work.** §2.5 confirms neither `CourierPayment` nor `CourierFuel` is populated on a network partner job today, so the assignment-time data work must land before or with the display change — the substitution alone would show the partner zero.
 >
-> **§7 is the current state of every open question**, split into what is answered, what is a lookup (Kerran / Karen), and what still needs a decision from Steve. Start there before estimating.
+> **§7 is the current state of every open question**, split into what is answered, what is a lookup for Kerran, and what still needs a decision from Steve. Start there before estimating.
 >
 > Companion analysis lives in the `despatchwebchanges` repo — `pricing-breakdown-gap-analysis.md` (§6 covers the three-leg nationwide model), `extra-charges-deep-dive.md`, and `CourierPayCalculationIssues.md` in `Accounts`. A copy of this document is in `despatchwebchanges` alongside them; **this copy is the implementation deliverable.**
 
@@ -191,7 +191,7 @@ So the requirement has two halves that a single boolean will not express:
 
 ---
 
-## 3. The Display Change — For Karen, Implementing in Dispatch
+## 3. The Display Change — For Kerran, Implementing in Dispatch
 
 *Steve, 17 Sep 2026. This is the change being asked for.*
 
@@ -243,7 +243,7 @@ Apply the substitution to **every** NP-facing surface, not only the screen where
 >
 > **The job download report shows the full revenue amount.** If a network partner can run a job search and download the result, the revenue this whole change is meant to mask is handed over in a spreadsheet — regardless of what the dispatch board displays.
 >
-> **Karen to check this specifically.** The developer on that area is **Kerran**.
+> **Kerran to check this specifically.**
 >
 > Treat it as likely rather than possible. Exports are usually built from their own query or report definition rather than the screen's view model, so masking the UI does **not** mask the download. Two code paths, one of which nobody thinks to look at.
 
@@ -396,25 +396,25 @@ What still needs confirming is §6's own open question 8 — whether split jobs 
 | Q1 | The field the partner should see is **`CourierPayment`** (§3.1). |
 | Q2 | The network partner sees **DespatchWeb** and **Routed Operations**. Both are in scope for the substitution (§3.4). |
 | Q3 | **`AgentVehicleRate` exists.** The agent rate card is real and deployed (§4.2). |
-| Q6 | On an NP job `ucjbCourierID` stays blank; the partner goes in the agent field (§2.5). Karen has DB access to confirm values. |
+| Q6 | On an NP job `ucjbCourierID` stays blank; the partner goes in the agent field (§2.5). Kerran has DB access to confirm values. |
 | Q7 | Golden Black are an **agent**, and they have **their own couriers** — a network partner agent. Confirms the two pay layers in §2.2. |
 | Q8 | The path **produces child legs**. The delivery leg the partner is allocated to is a child job (§2.3, §4.3). |
 | Q9 | `ucjbAmount` is always populated; no risk of zero at allocation (§5.6). |
 
 ### 7.2 Assigned — lookups, not decisions
 
-**Kerran** has full database access for the agents table and the remaining schema questions. **Karen** has access to the stored procedures and trigger bodies.
+**Kerran** has full database access for the agents table and the remaining schema questions, and access to the stored procedures and trigger bodies.
 
 | # | Lookup | Owner |
 |---|---|---|
 | Q4 | Full `tucAgents` column list — partially captured in §2.7 from the schema dump; confirm against live. | Kerran |
-| Q5 | Body of `tucJob_Update_AddPickupAmountToNationwideAmount`. | Karen |
-| Q12 | What signal can gate `tucJob_InsertUpdate_CalculateCourierPayment` — check `Reprice`, `RatedManually`, `CourierPaymentManualOverride` and the existing recalculate triggers (§2.6d). | Karen |
+| Q5 | Body of `tucJob_Update_AddPickupAmountToNationwideAmount`. | Kerran |
+| Q12 | What signal can gate `tucJob_InsertUpdate_CalculateCourierPayment` — check `Reprice`, `RatedManually`, `CourierPaymentManualOverride` and the existing recalculate triggers (§2.6d). | Kerran |
 | Q14 | Is `CourierFuel` populated on NP assignment? Expected **no**, per §2.5 — confirm. | Kerran |
 | Q15a | Is the NP agent field named **`NpagentID`** or the existing **`AgentID`**? Is Migration M6 (`NPCourierPayment`) deployed? | Kerran |
 | Q16 | Where does the **agent's default percentage** live? `tucAgents` has no percentage column — candidates are `tblSetting.DefaultCourierPercentage` or `Agent.DefaultCourierPaymentPercent`. | Kerran |
 | Q17a | Confirm the partner's own driver lands in `ucjbCourierID` when they assign on their board (§2.6d). | Kerran |
-| Q18 | Does the **job search / job download** export expose full revenue to a logged-in network partner? Built from its own query, so masking the UI will not cover it (§3.4). | Karen to check · Kerran owns the area |
+| Q18 | Does the **job search / job download** export expose full revenue to a logged-in network partner? Built from its own query, so masking the UI will not cover it (§3.4). | Kerran |
 
 ### 7.3 Still needs a decision — no lookup will settle these
 
