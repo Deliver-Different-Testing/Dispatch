@@ -7,6 +7,10 @@ R&D space for proposed changes to the Dispatch app (production repo lives at git
 2. George reviews and tests via GitHub Pages preview.
 3. Final deliverable to the developer is a Markdown spec describing the change — not code commits to despatchweb.
 
+## Specs
+
+- [network-partner-pay-visibility.md](./network-partner-pay-visibility.md) — NP price-breakdown substitution: a logged-in network partner sees `CourierPayment` / `CourierFuel` in place of job revenue. For Karen. *(17 Sep 2026)*
+
 ## Current mockup
 - **Live preview:** https://deliver-different-testing.github.io/Dispatch/ (once Pages is enabled)
 - **Source:** [index.html](./index.html)
